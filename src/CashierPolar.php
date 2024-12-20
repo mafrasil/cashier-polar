@@ -8,14 +8,14 @@ class CashierPolar
 {
     protected function baseUrl()
     {
-        return config('cashier-polar.urls.'.
+        return config('cashier-polar.urls.' .
             (config('cashier-polar.sandbox') ? 'sandbox' : 'production'));
     }
 
     protected function request()
     {
         return Http::withHeaders([
-            'Authorization' => 'Bearer '.config('cashier-polar.key'),
+            'Authorization' => 'Bearer ' . config('cashier-polar.key'),
             'Content-Type' => 'application/json',
         ])->baseUrl($this->baseUrl());
     }
@@ -38,12 +38,21 @@ class CashierPolar
             ->json();
     }
 
-    public function getProducts()
+    public function products(array $filters = [])
     {
         return $this->request()
-            ->get('products', [
+            ->get('products', array_merge([
                 'organization_id' => config('cashier-polar.organization_id'),
                 'is_archived' => false,
+            ], $filters))
+            ->json();
+    }
+
+    public function product(string $productId)
+    {
+        return $this->request()
+            ->get("products/{$productId}", [
+                'organization_id' => config('cashier-polar.organization_id'),
             ])
             ->json();
     }

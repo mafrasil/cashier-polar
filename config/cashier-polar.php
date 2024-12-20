@@ -48,7 +48,7 @@ return [
      */
     'urls' => [
         'production' => 'https://api.polar.sh/v1',
-        'sandbox' => 'https://sandbox.polar.sh/v1',
+        'sandbox' => 'https://sandbox-api.polar.sh/v1',
     ],
 
     /*

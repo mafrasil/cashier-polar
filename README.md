@@ -97,14 +97,26 @@ $customer = $user->customer;
 
 ### Checkout Sessions
 
-Create a checkout session:
+Create a checkout session for a user:
 
 ```php
-use Mafrasil\CashierPolar\Facades\CashierPolar;
+// Through the billable model (recommended)
+$checkout = $user->checkout('price_id');
 
-$checkout = CashierPolar::createCheckout('price_id', [
-    // Additional options
+// The checkout method will automatically:
+// - Add the customer_id from the user's Polar customer
+// - Set the success_url from config (defaults to '/dashboard')
+
+// Or with custom options
+$checkout = $user->checkout('price_id', [
+    'success_url' => route('checkout.success'),
+    'cancel_url' => route('checkout.cancel'),
+    // Any other Polar checkout options
 ]);
+
+// The response will contain:
+// - id: The checkout session ID
+// - url: The checkout URL to redirect to
 ```
 
 #### Using with Blade
@@ -113,7 +125,15 @@ $checkout = CashierPolar::createCheckout('price_id', [
 // Controller
 public function checkout()
 {
-    $checkout = CashierPolar::createCheckout('price_id');
+    // Make sure the user has a Polar customer ID first
+    if (! $user->customer) {
+        $user->createCustomer([
+            'name' => $user->name,
+            'email' => $user->email,
+        ]);
+    }
+
+    $checkout = auth()->user()->checkout('price_id');
     return view('checkout', ['checkoutUrl' => $checkout['url']]);
 }
 
@@ -125,8 +145,18 @@ public function checkout()
 
 ```php
 // routes/api.php
-Route::post('checkout', function () {
-    $checkout = CashierPolar::createCheckout('price_id');
+Route::post('checkout', function (Request $request) {
+    $user = $request->user();
+
+    // Ensure user has a Polar customer
+    if (! $user->customer) {
+        $user->createCustomer([
+            'name' => $user->name,
+            'email' => $user->email,
+        ]);
+    }
+
+    $checkout = $user->checkout('price_id');
     return ['url' => $checkout['url']];
 });
 
@@ -135,6 +165,36 @@ fetch('/api/checkout', { method: 'POST' })
     .then(res => res.json())
     .then(data => window.location.href = data.url);
 ```
+
+#### Using with Separate Frontend (e.g., Next.js)
+
+1. First, create an API endpoint to list products/prices:
+
+```php
+// routes/api.php
+use Mafrasil\CashierPolar\Facades\CashierPolar;
+
+Route::get('products', function () {
+    return CashierPolar::products();
+});
+
+// Or in a controller
+public function products()
+{
+    return CashierPolar::products();
+}
+
+// You can also get a specific product
+$product = CashierPolar::product('product_id');
+
+// Or filter products
+$products = CashierPolar::products([
+    'is_archived' => false,
+    // other filters
+]);
+```
+
+2. Fetch and display products in Next.js:
 
 ### Subscriptions
 
@@ -224,7 +284,7 @@ mkdir cashier-polar-workspace
 cd cashier-polar-workspace
 
 # Clone your package
-git clone git@github.com:mafrasil/cashier-polar.git
+git clone https://github.com/mafrasil/cashier-polar.git
 
 # Create a new Laravel project for testing
 laravel new test-project

@@ -48,6 +48,8 @@
         "prepare": "@php vendor/bin/testbench package:discover --ansi",
         "analyse": "vendor/bin/phpstan analyse",
         "test": "vendor/bin/pest",
+        "test:unit": "vendor/bin/pest --group=!api",
+        "test:api": "vendor/bin/pest --group=api",
         "test-coverage": "vendor/bin/pest --coverage",
         "format": "vendor/bin/pint"
     },
