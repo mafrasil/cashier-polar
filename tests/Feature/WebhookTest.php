@@ -33,7 +33,7 @@ it('handles subscription created webhook', function () {
 
     $response = $this->withHeaders([
         'webhook-id' => $webhookId,
-        'webhook-signature' => 'v1,' . $signature,
+        'webhook-signature' => 'v1,'.$signature,
         'webhook-timestamp' => (string) $timestamp,
         'content-type' => 'application/json',
     ])->postJson('polar/webhook', $payload);

@@ -30,7 +30,7 @@ class PolarSubscription extends Model
 
     public function valid(): bool
     {
-        return $this->active() && !$this->ended();
+        return $this->active() && ! $this->ended();
     }
 
     public function active(): bool

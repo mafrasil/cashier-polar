@@ -23,7 +23,7 @@ beforeEach(function () {
 function sendWebhook($payload)
 {
     $timestamp = now()->timestamp;
-    $webhookId = 'wh_' . substr(md5(uniqid()), 0, 16);
+    $webhookId = 'wh_'.substr(md5(uniqid()), 0, 16);
     $payloadJson = json_encode($payload);
 
     $secret = config('cashier-polar.webhook_secret');
@@ -32,7 +32,7 @@ function sendWebhook($payload)
 
     return test()->withHeaders([
         'webhook-id' => $webhookId,
-        'webhook-signature' => 'v1,' . $signature,
+        'webhook-signature' => 'v1,'.$signature,
         'webhook-timestamp' => (string) $timestamp,
         'content-type' => 'application/json',
     ])->postJson('polar/webhook', $payload);

@@ -14,6 +14,6 @@ class User extends Model
 
     public static function factory()
     {
-        return UserFactory::new ();
+        return UserFactory::new();
     }
 }
