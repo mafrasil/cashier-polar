@@ -212,6 +212,65 @@ Event::listen(function (SubscriptionCreated $event) {
 composer test
 ```
 
+## Local Development
+
+To test this package locally:
+
+1. Create a workspace directory and clone both repositories:
+
+```bash
+# Create and enter workspace directory
+mkdir cashier-polar-workspace
+cd cashier-polar-workspace
+
+# Clone your package
+git clone git@github.com:mafrasil/cashier-polar.git
+
+# Create a new Laravel project for testing
+laravel new test-project
+cd test-project
+```
+
+2. Add the local repository to your test project's `composer.json`:
+
+```json
+{
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../cashier-polar"
+        }
+    ]
+}
+```
+
+3. Require the package in your test project:
+
+```bash
+composer require mafrasil/cashier-polar:*
+```
+
+4. Set up your test project:
+
+```bash
+# Publish and run migrations
+php artisan vendor:publish --tag="cashier-polar-migrations"
+php artisan migrate
+
+# Generate webhook secret
+php artisan cashier-polar:webhook-secret
+```
+
+Your workspace structure will look like this:
+
+```
+cashier-polar-workspace/
+├── cashier-polar/         # Your package
+└── test-project/         # Laravel test project
+```
+
+Any changes you make to the package will be automatically reflected in your test project.
+
 ## Changelog
 
 Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
