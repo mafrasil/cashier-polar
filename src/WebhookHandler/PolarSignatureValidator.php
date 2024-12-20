@@ -16,9 +16,9 @@ class PolarSignatureValidator implements SignatureValidator
         return boolval($wh->verify(
             $request->getContent(),
             [
-                "webhook-id" => $request->header("webhook-id"),
-                "webhook-signature" => $request->header("webhook-signature"),
-                "webhook-timestamp" => $request->header("webhook-timestamp"),
+                'webhook-id' => $request->header('webhook-id'),
+                'webhook-signature' => $request->header('webhook-signature'),
+                'webhook-timestamp' => $request->header('webhook-timestamp'),
             ]
         ));
     }

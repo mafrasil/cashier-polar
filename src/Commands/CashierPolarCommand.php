@@ -7,6 +7,7 @@ use Illuminate\Console\Command;
 class CashierPolarCommand extends Command
 {
     public $signature = 'cashier-polar:install';
+
     public $description = 'Install the Cashier Polar package';
 
     public function handle(): int

@@ -29,8 +29,9 @@ class ProcessPolarWebhook extends ProcessWebhookJob
     {
         $billable = $this->getBillableFromCustomerId($payload['customer_id']);
 
-        if (!$billable) {
-            logger()->error('No billable found for customer_id: ' . $payload['customer_id']);
+        if (! $billable) {
+            logger()->error('No billable found for customer_id: '.$payload['customer_id']);
+
             return;
         }
 
@@ -51,8 +52,9 @@ class ProcessPolarWebhook extends ProcessWebhookJob
     {
         $billable = $this->getBillableFromCustomerId($payload['customer_id']);
 
-        if (!$billable) {
-            logger()->error('No billable found for customer_id: ' . $payload['customer_id']);
+        if (! $billable) {
+            logger()->error('No billable found for customer_id: '.$payload['customer_id']);
+
             return;
         }
 
@@ -70,8 +72,9 @@ class ProcessPolarWebhook extends ProcessWebhookJob
         logger()->info('Processing subscription created', $payload);
         $billable = $this->getBillableFromCustomerId($payload['customer_id']);
 
-        if (!$billable) {
-            logger()->error('No billable found for customer_id: ' . $payload['customer_id']);
+        if (! $billable) {
+            logger()->error('No billable found for customer_id: '.$payload['customer_id']);
+
             return;
         }
 
@@ -89,8 +92,9 @@ class ProcessPolarWebhook extends ProcessWebhookJob
     {
         $billable = $this->getBillableFromCustomerId($payload['customer_id']);
 
-        if (!$billable) {
-            logger()->error('No billable found for customer_id: ' . $payload['customer_id']);
+        if (! $billable) {
+            logger()->error('No billable found for customer_id: '.$payload['customer_id']);
+
             return;
         }
 
@@ -104,8 +108,9 @@ class ProcessPolarWebhook extends ProcessWebhookJob
     {
         $billable = $this->getBillableFromCustomerId($payload['customer_id']);
 
-        if (!$billable) {
-            logger()->error('No billable found for customer_id: ' . $payload['customer_id']);
+        if (! $billable) {
+            logger()->error('No billable found for customer_id: '.$payload['customer_id']);
+
             return;
         }
 
@@ -122,8 +127,9 @@ class ProcessPolarWebhook extends ProcessWebhookJob
     {
         $billable = $this->getBillableFromCustomerId($payload['customer_id']);
 
-        if (!$billable) {
-            logger()->error('No billable found for customer_id: ' . $payload['customer_id']);
+        if (! $billable) {
+            logger()->error('No billable found for customer_id: '.$payload['customer_id']);
+
             return;
         }
 
@@ -140,8 +146,9 @@ class ProcessPolarWebhook extends ProcessWebhookJob
     {
         $billable = $this->getBillableFromCustomerId($payload['customer_id']);
 
-        if (!$billable) {
-            logger()->error('No billable found for customer_id: ' . $payload['customer_id']);
+        if (! $billable) {
+            logger()->error('No billable found for customer_id: '.$payload['customer_id']);
+
             return;
         }
 
@@ -162,6 +169,6 @@ class ProcessPolarWebhook extends ProcessWebhookJob
     {
         return PolarCustomer::where('polar_id', $customerId)
             ->first()
-        ?->billable;
+            ?->billable;
     }
 }
