@@ -1,68 +1,209 @@
-# :package_description
+# Laravel Cashier Polar
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/:vendor_slug/:package_slug.svg?style=flat-square)](https://packagist.org/packages/:vendor_slug/:package_slug)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/:vendor_slug/:package_slug/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/:vendor_slug/:package_slug/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/:vendor_slug/:package_slug/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/:vendor_slug/:package_slug/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/:vendor_slug/:package_slug.svg?style=flat-square)](https://packagist.org/packages/:vendor_slug/:package_slug)
-<!--delete-->
----
-This repo can be used to scaffold a Laravel package. Follow these steps to get started:
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/mafrasil/cashier-polar.svg?style=flat-square)](https://packagist.org/packages/mafrasil/cashier-polar)
+[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/mafrasil/cashier-polar/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/mafrasil/cashier-polar/actions?query=workflow%3Arun-tests+branch%3Amain)
+[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/mafrasil/cashier-polar/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/mafrasil/cashier-polar/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
+[![Total Downloads](https://img.shields.io/packagist/dt/mafrasil/cashier-polar.svg?style=flat-square)](https://packagist.org/packages/mafrasil/cashier-polar)
 
-1. Press the "Use this template" button at the top of this repo to create a new repo with the contents of this skeleton.
-2. Run "php ./configure.php" to run a script that will replace all placeholders throughout all the files.
-3. Have fun creating your package.
-4. If you need help creating a package, consider picking up our <a href="https://laravelpackage.training">Laravel Package Training</a> video course.
----
-<!--/delete-->
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+A Laravel Cashier integration for [Polar](https://polar.sh) payment processing. This package provides an expressive interface for subscription billing services using Polar's API.
 
-## Support us
+## Features
 
-[<img src="https://github-ads.s3.eu-central-1.amazonaws.com/:package_name.jpg?t=1" width="419px" />](https://spatie.be/github-ad-click/:package_name)
+-   Easy integration with Polar's payment processing
+-   Subscription management
+-   Webhook handling for various events
+-   Customer management
+-   Transaction tracking
+-   Support for both production and sandbox environments
 
-We invest a lot of resources into creating [best in class open source packages](https://spatie.be/open-source). You can support us by [buying one of our paid products](https://spatie.be/open-source/support-us).
+## Requirements
 
-We highly appreciate you sending us a postcard from your hometown, mentioning which of our package(s) you are using. You'll find our address on [our contact page](https://spatie.be/about-us). We publish all received postcards on [our virtual postcard wall](https://spatie.be/open-source/postcards).
+-   PHP 8.3+
+-   Laravel 10.0+ or 11.0+
+-   Polar account and API credentials
 
 ## Installation
 
 You can install the package via composer:
 
 ```bash
-composer require :vendor_slug/:package_slug
+composer require mafrasil/cashier-polar
 ```
 
-You can publish and run the migrations with:
+After installing the package, publish and run the migrations:
 
 ```bash
-php artisan vendor:publish --tag=":package_slug-migrations"
+php artisan vendor:publish --tag="cashier-polar-migrations"
 php artisan migrate
 ```
 
-You can publish the config file with:
+Publish the configuration file:
 
 ```bash
-php artisan vendor:publish --tag=":package_slug-config"
+php artisan vendor:publish --tag="cashier-polar-config"
 ```
 
-This is the contents of the published config file:
+## Configuration
 
-```php
-return [
-];
+Configure your Polar credentials in your `.env` file:
+
+```env
+POLAR_API_KEY=your-api-key
+POLAR_ORGANIZATION_ID=your-organization-id
+POLAR_WEBHOOK_SECRET=your-webhook-secret
+POLAR_SANDBOX=true # Set to false for production
 ```
 
-Optionally, you can publish the views using
+You can generate a secure webhook secret using the provided artisan command:
 
 ```bash
-php artisan vendor:publish --tag=":package_slug-views"
+php artisan cashier-polar:webhook-secret
 ```
+
+This will generate a cryptographically secure secret that you can use for your webhook configuration.
 
 ## Usage
 
+### Setup Billable Model
+
+Add the `Billable` trait to your billable model (typically the User model):
+
 ```php
-$variable = new VendorName\Skeleton();
-echo $variable->echoPhrase('Hello, VendorName!');
+use Mafrasil\CashierPolar\Concerns\Billable;
+
+class User extends Authenticatable
+{
+    use Billable;
+}
+```
+
+### Customer Management
+
+Create a customer:
+
+```php
+$customer = $user->createCustomer([
+    'polar_id' => 'cus_123',
+    'name' => 'John Doe',
+    'email' => 'john@example.com',
+]);
+```
+
+Retrieve a customer:
+
+```php
+$customer = $user->customer;
+```
+
+### Checkout Sessions
+
+Create a checkout session:
+
+```php
+use Mafrasil\CashierPolar\Facades\CashierPolar;
+
+$checkout = CashierPolar::createCheckout('price_id', [
+    // Additional options
+]);
+```
+
+#### Using with Blade
+
+```php
+// Controller
+public function checkout()
+{
+    $checkout = CashierPolar::createCheckout('price_id');
+    return view('checkout', ['checkoutUrl' => $checkout['url']]);
+}
+
+// View
+<a href="{{ $checkoutUrl }}" class="button">Subscribe</a>
+```
+
+#### Using with API
+
+```php
+// routes/api.php
+Route::post('checkout', function () {
+    $checkout = CashierPolar::createCheckout('price_id');
+    return ['url' => $checkout['url']];
+});
+
+// Fetch from any frontend
+fetch('/api/checkout', { method: 'POST' })
+    .then(res => res.json())
+    .then(data => window.location.href = data.url);
+```
+
+### Subscriptions
+
+Access subscriptions:
+
+```php
+// Get all subscriptions
+$subscriptions = $user->subscriptions;
+
+// Get the default subscription
+$subscription = $user->subscription();
+
+// Check subscription status
+if ($subscription->valid()) {
+    // Subscription is valid
+}
+
+if ($subscription->active()) {
+    // Subscription is active
+}
+
+if ($subscription->canceled()) {
+    // Subscription is canceled
+}
+```
+
+### Transactions
+
+Access transactions:
+
+```php
+// Get all transactions
+$transactions = $user->transactions;
+```
+
+### Webhook Handling
+
+The package automatically handles the following webhook events:
+
+-   `checkout.created`
+-   `checkout.updated`
+-   `subscription.created`
+-   `subscription.updated`
+-   `subscription.active`
+-   `subscription.revoked`
+-   `subscription.canceled`
+
+## Events
+
+The package dispatches Laravel events for various webhook events:
+
+-   `CheckoutCreated`
+-   `CheckoutUpdated`
+-   `SubscriptionCreated`
+-   `SubscriptionUpdated`
+-   `SubscriptionActive`
+-   `SubscriptionRevoked`
+-   `SubscriptionCanceled`
+
+### Listening to Events
+
+```php
+// EventServiceProvider.php
+Event::listen(function (SubscriptionCreated $event) {
+    $subscription = $event->subscription;
+    $user = $subscription->billable;
+
+    // Send welcome email, etc.
+});
 ```
 
 ## Testing
@@ -85,8 +226,8 @@ Please review [our security policy](../../security/policy) on how to report secu
 
 ## Credits
 
-- [:author_name](https://github.com/:author_username)
-- [All Contributors](../../contributors)
+-   [mafrasil](https://github.com/mafrasil)
+-   [All Contributors](../../contributors)
 
 ## License
 

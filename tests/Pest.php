@@ -1,5 +1,9 @@
 <?php
 
-use VendorName\Skeleton\Tests\TestCase;
+use Mafrasil\CashierPolar\Tests\TestCase;
 
-uses(TestCase::class)->in(__DIR__);
+uses(TestCase::class)
+    ->beforeEach(function () {
+        $this->withoutExceptionHandling();
+    })
+    ->in(__DIR__);

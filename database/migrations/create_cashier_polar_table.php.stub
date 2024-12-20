@@ -1,0 +1,66 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up()
+    {
+        Schema::create('polar_customers', function (Blueprint $table) {
+            $table->id();
+            $table->morphs('billable');
+            $table->string('polar_id')->unique();
+            $table->string('name');
+            $table->string('email');
+            $table->timestamp('trial_ends_at')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('polar_subscriptions', function (Blueprint $table) {
+            $table->id();
+            $table->morphs('billable');
+            $table->string('type');
+            $table->string('polar_id')->unique();
+            $table->string('status');
+            $table->timestamp('trial_ends_at')->nullable();
+            $table->timestamp('ends_at')->nullable();
+            $table->timestamps();
+        });
+
+        Schema::create('polar_subscription_items', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('subscription_id');
+            $table->string('product_id');
+            $table->string('price_id');
+            $table->string('status');
+            $table->integer('quantity');
+            $table->timestamps();
+
+            $table->unique(['subscription_id', 'price_id']);
+        });
+
+        Schema::create('polar_transactions', function (Blueprint $table) {
+            $table->id();
+            $table->morphs('billable');
+            $table->string('polar_id')->unique();
+            $table->string('polar_subscription_id')->nullable()->index();
+            $table->string('checkout_id')->nullable();
+            $table->string('status');
+            $table->decimal('total', 8, 2);
+            $table->decimal('tax', 8, 2);
+            $table->string('currency', 3);
+            $table->timestamp('billed_at');
+            $table->timestamps();
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('polar_transactions');
+        Schema::dropIfExists('polar_subscription_items');
+        Schema::dropIfExists('polar_subscriptions');
+        Schema::dropIfExists('polar_customers');
+    }
+};
