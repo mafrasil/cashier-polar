@@ -13,10 +13,11 @@ class PolarSignatureValidator
         $signingSecret = base64_encode(config('cashier-polar.webhook_secret'));
 
         // Ensure we have all required headers
-        if (!$request->header('webhook-id') ||
-            !$request->header('webhook-signature') ||
-            !$request->header('webhook-timestamp')) {
+        if (! $request->header('webhook-id') ||
+            ! $request->header('webhook-signature') ||
+            ! $request->header('webhook-timestamp')) {
             Log::error('Missing required webhook headers');
+
             return false;
         }
 
@@ -37,6 +38,7 @@ class PolarSignatureValidator
                 'error' => $e->getMessage(),
                 'error_class' => get_class($e),
             ]);
+
             return false;
         }
     }

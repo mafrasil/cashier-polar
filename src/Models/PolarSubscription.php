@@ -69,7 +69,7 @@ class PolarSubscription extends Model
 
     public function resume(): self
     {
-        if (!$this->cancelled()) {
+        if (! $this->cancelled()) {
             throw new \LogicException('Unable to resume subscription that is not cancelled.');
         }
 
@@ -82,50 +82,44 @@ class PolarSubscription extends Model
 
     /**
      * Get the subscription name (product ID).
-     *
-     * @return string|null
      */
     public function getNameAttribute(): ?string
     {
-        if (!$this->items) {
+        if (! $this->items) {
             return null;
         }
 
         $item = $this->items->first();
-        if (!$item) {
+        if (! $item) {
             return null;
         }
 
-        return $item->product_name ?? 'Product ' . $item->product_id;
+        return $item->product_name ?? 'Product '.$item->product_id;
     }
 
     /**
      * Get the subscription price.
-     *
-     * @return string|null
      */
     public function getPriceAttribute(): ?string
     {
-        if (!$this->items) {
+        if (! $this->items) {
             return null;
         }
 
         $item = $this->items->first();
-        if (!$item || !$item->price_amount || !$item->price_currency) {
+        if (! $item || ! $item->price_amount || ! $item->price_currency) {
             return null;
         }
 
-        return number_format($item->price_amount / 100, 2) . ' ' . strtoupper($item->price_currency);
+        return number_format($item->price_amount / 100, 2).' '.strtoupper($item->price_currency);
     }
 
     /**
      * Get the billing interval.
-     *
-     * @return string|null
      */
     public function getIntervalAttribute(): ?string
     {
-        if (!$this->items) {
+        if (! $this->items) {
             return null;
         }
 
@@ -134,12 +128,10 @@ class PolarSubscription extends Model
 
     /**
      * Get the subscription description.
-     *
-     * @return string|null
      */
     public function getDescriptionAttribute(): ?string
     {
-        if (!$this->items) {
+        if (! $this->items) {
             return null;
         }
 
@@ -212,12 +204,10 @@ class PolarSubscription extends Model
 
     /**
      * Get the subscription product ID.
-     *
-     * @return string|null
      */
     public function getProductIdAttribute(): ?string
     {
-        if (!$this->items) {
+        if (! $this->items) {
             return null;
         }
 
@@ -226,12 +216,10 @@ class PolarSubscription extends Model
 
     /**
      * Get the subscription price ID.
-     *
-     * @return string|null
      */
     public function getPriceIdAttribute(): ?string
     {
-        if (!$this->items) {
+        if (! $this->items) {
             return null;
         }
 
