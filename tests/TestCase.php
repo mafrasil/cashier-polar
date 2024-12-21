@@ -14,14 +14,14 @@ class TestCase extends Orchestra
         parent::setUp();
 
         // Load .env.testing if it exists, fallback to .env
-        if (file_exists(__DIR__ . '/../.env.testing')) {
-            \Dotenv\Dotenv::createImmutable(__DIR__ . '/../', '.env.testing')->load();
-        } elseif (file_exists(__DIR__ . '/../.env')) {
-            \Dotenv\Dotenv::createImmutable(__DIR__ . '/../')->load();
+        if (file_exists(__DIR__.'/../.env.testing')) {
+            \Dotenv\Dotenv::createImmutable(__DIR__.'/../', '.env.testing')->load();
+        } elseif (file_exists(__DIR__.'/../.env')) {
+            \Dotenv\Dotenv::createImmutable(__DIR__.'/../')->load();
         }
 
         Factory::guessFactoryNamesUsing(
-            fn(string $modelName) => 'Mafrasil\\CashierPolar\\Tests\\Fixtures\\' . class_basename($modelName) . 'Factory'
+            fn (string $modelName) => 'Mafrasil\\CashierPolar\\Tests\\Fixtures\\'.class_basename($modelName).'Factory'
         );
 
         // By default, prevent stray requests
@@ -38,7 +38,7 @@ class TestCase extends Orchestra
         Http::preventStrayRequests(false);
 
         // Verify we have valid credentials for integration tests
-        if (!env('POLAR_API_KEY') || !env('POLAR_ORGANIZATION_ID')) {
+        if (! env('POLAR_API_KEY') || ! env('POLAR_ORGANIZATION_ID')) {
             $this->markTestSkipped('Integration tests require POLAR_API_KEY and POLAR_ORGANIZATION_ID environment variables');
         }
     }
@@ -53,17 +53,17 @@ class TestCase extends Orchestra
     protected function defineDatabaseMigrations(): void
     {
         // Load package migrations
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
         // Create users table for testing
-        $this->loadMigrationsFrom(__DIR__ . '/database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/database/migrations');
 
         // Load the cashier-polar stub migration
-        $migration = include __DIR__ . '/../database/migrations/create_cashier_polar_table.php.stub';
+        $migration = include __DIR__.'/../database/migrations/create_cashier_polar_table.php.stub';
         $migration->up();
 
         // Create webhook_calls table for spatie/webhook-client
-        $webhookMigration = include __DIR__ . '/../vendor/spatie/laravel-webhook-client/database/migrations/create_webhook_calls_table.php.stub';
+        $webhookMigration = include __DIR__.'/../vendor/spatie/laravel-webhook-client/database/migrations/create_webhook_calls_table.php.stub';
         $webhookMigration->up();
     }
 

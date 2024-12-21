@@ -163,7 +163,7 @@ it('can get real products from sandbox', function () {
 
     // If there's an error in the response, log it but don't fail
     if (isset($response['error'])) {
-        $this->markTestSkipped("API Error: {$response['error']} - " . json_encode($response['detail'] ?? []));
+        $this->markTestSkipped("API Error: {$response['error']} - ".json_encode($response['detail'] ?? []));
     }
 
     // Test the response structure
@@ -175,7 +175,7 @@ it('can get real products from sandbox', function () {
         ->toHaveKey('total_count')
         ->toHaveKey('max_page');
 
-    if (!empty($response['items'])) {
+    if (! empty($response['items'])) {
         expect($response['items'][0])
             ->toHaveKey('id')
             ->toHaveKey('name')
@@ -190,7 +190,7 @@ it('can get a real single product from sandbox', function () {
 
     // Handle API errors
     if (isset($response['error'])) {
-        $this->markTestSkipped("API Error: {$response['error']} - " . json_encode($response['detail'] ?? []));
+        $this->markTestSkipped("API Error: {$response['error']} - ".json_encode($response['detail'] ?? []));
     }
 
     if (empty($response['items'])) {
@@ -202,7 +202,7 @@ it('can get a real single product from sandbox', function () {
 
     // Handle API errors for single product request
     if (isset($productResponse['error'])) {
-        $this->markTestSkipped("API Error: {$productResponse['error']} - " . json_encode($productResponse['detail'] ?? []));
+        $this->markTestSkipped("API Error: {$productResponse['error']} - ".json_encode($productResponse['detail'] ?? []));
     }
 
     expect($productResponse)
