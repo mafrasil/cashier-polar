@@ -158,7 +158,7 @@ composer test
 
 ## Credits
 
--   [Your Name](https://github.com/yourusername)
+-   [mafrasil](https://github.com/mafrasil)
 -   [All Contributors](../../contributors)
 
 ## License

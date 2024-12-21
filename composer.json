@@ -1,17 +1,19 @@
 {
     "name": "mafrasil/cashier-polar",
-    "description": "This is my package cashier-polar",
+    "description": "Laravel Cashier integration for Polar.sh subscription billing services",
     "keywords": [
         "mafrasil",
         "laravel",
-        "cashier-polar"
+        "cashier-polar",
+        "polar",
+        "billing",
+        "subscriptions"
     ],
     "homepage": "https://github.com/mafrasil/cashier-polar",
     "license": "MIT",
     "authors": [
         {
             "name": "mafrasil",
-            "email": "timafrasil@proton.me",
             "role": "Developer"
         }
     ],
