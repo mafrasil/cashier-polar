@@ -111,6 +111,7 @@ trait Billable
     public function subscribed(string $type = 'default'): bool
     {
         $subscription = $this->subscription($type);
+
         return $subscription && $subscription->valid();
     }
 
@@ -127,7 +128,7 @@ trait Billable
     {
         $subscription = $this->subscription($type);
 
-        if (!$subscription || !$subscription->valid()) {
+        if (! $subscription || ! $subscription->valid()) {
             return false;
         }
 
@@ -165,6 +166,7 @@ trait Billable
                         'billable_type' => get_class($this),
                     ]);
                 }
+
                 return $existingCustomer;
             }
         }
@@ -179,8 +181,6 @@ trait Billable
 
     /**
      * Get the default subscription.
-     *
-     * @return \Mafrasil\CashierPolar\Models\PolarSubscription|null
      */
     public function getSubscriptionAttribute(): ?PolarSubscription
     {
