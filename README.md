@@ -130,6 +130,7 @@ The package automatically handles these webhook events:
 
 -   `checkout.created`
 -   `checkout.updated`
+-   `order.created`
 -   `subscription.created`
 -   `subscription.updated`
 -   `subscription.active`

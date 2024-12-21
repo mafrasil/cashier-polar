@@ -128,7 +128,7 @@ trait Billable
     {
         $subscription = $this->subscription($type);
 
-        if (! $subscription || ! $subscription->valid()) {
+        if (!$subscription || !$subscription->valid()) {
             return false;
         }
 
@@ -171,7 +171,6 @@ trait Billable
             }
         }
 
-        // If no existing customer was found, create a new one
         if ($this->customer) {
             throw new \Exception('Customer already exists for this billable entity.');
         }
@@ -179,9 +178,6 @@ trait Billable
         return $this->customer()->create($attributes);
     }
 
-    /**
-     * Get the default subscription.
-     */
     public function getSubscriptionAttribute(): ?PolarSubscription
     {
         try {
