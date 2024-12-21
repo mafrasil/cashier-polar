@@ -1,17 +1,23 @@
-# Laravel Cashier Polar
+<p align="center"><img width="355" height="62" src="/art/logo.svg" alt="Logo Laravel Cashier"></p>
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/mafrasil/cashier-polar.svg?style=flat-square)](https://packagist.org/packages/mafrasil/cashier-polar)
 [![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/mafrasil/cashier-polar/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/mafrasil/cashier-polar/actions?query=workflow%3Arun-tests+branch%3Amain)
 [![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/mafrasil/cashier-polar/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/mafrasil/cashier-polar/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/mafrasil/cashier-polar.svg?style=flat-square)](https://packagist.org/packages/mafrasil/cashier-polar)
 
-A Laravel Cashier integration for [Polar](https://polar.sh) payment processing.
+## Disclaimer
+
+> **Note**: This is not an official Laravel package. This is a community-built package following Laravel Cashier principles and is currently a work in progress.
+
+## Introduction
+
+Cashier Polar provides an expressive, fluent interface to [Polar's](https://polar.sh) subscription billing services. It handles almost all of the boilerplate subscription billing code you are dreading writing.
 
 ## Requirements
 
 -   PHP 8.3+
--   Laravel 10.0+ or 11.0+
--   Polar account and API credentials
+-   Laravel 10.0+ / 11.0+
+-   Polar account and API credentials (https://polar.sh)
 
 ## Installation
 

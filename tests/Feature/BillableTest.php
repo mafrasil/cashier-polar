@@ -116,15 +116,18 @@ it('can check if subscription is canceled', function () {
         'status' => 'active',
     ]);
 
-    expect($subscription->canceled())->toBeFalse();
+    expect($subscription->cancelled())->toBeFalse();
+    expect($subscription->valid())->toBeTrue();
+    expect($subscription->onGracePeriod())->toBeFalse();
 
     $subscription->update([
         'status' => 'canceled',
         'ends_at' => now()->addDays(5),
     ]);
 
-    expect($subscription->canceled())->toBeTrue()
-        ->and($subscription->active())->toBeTrue();
+    expect($subscription->cancelled())->toBeTrue()
+        ->and($subscription->valid())->toBeTrue()
+        ->and($subscription->onGracePeriod())->toBeTrue();
 
     $subscription->update([
         'ends_at' => now()->subDay(),
