@@ -8,8 +8,8 @@ class CashierPolar
 {
     protected function baseUrl()
     {
-        return config('cashier-polar.urls.' .
-            (config('cashier-polar.sandbox') ? 'sandbox' : 'production'));
+        $environment = config('cashier-polar.sandbox') ? 'sandbox' : 'production';
+        return config("cashier-polar.urls.{$environment}");
     }
 
     protected function request()
@@ -29,6 +29,13 @@ class CashierPolar
         ], $options));
 
         return $response->json();
+    }
+
+    public function cancelSubscription(string $subscription_id)
+    {
+        return $this->request()
+            ->delete("customer-portal/subscriptions/{$subscription_id}")
+            ->json();
     }
 
     public function getCheckout(string $checkoutId)

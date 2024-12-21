@@ -27,9 +27,38 @@ trait Billable
             ->orderBy('created_at', 'desc');
     }
 
+    public function getSubscriptions()
+    {
+        return $this->subscriptions()->get();
+    }
+
     public function subscription(string $type = 'default'): ?PolarSubscription
     {
-        return $this->subscriptions()->where('type', $type)->first();
+        try {
+            return $this->subscriptions()
+                ->where('type', $type)
+                ->first();
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    public function subscriptionName(string $type = 'default'): ?string
+    {
+        if ($subscription = $this->subscription($type)) {
+            return $subscription->items->first()?->product_id;
+        }
+
+        return null;
+    }
+
+    public function subscriptionPrice(string $type = 'default'): ?string
+    {
+        if ($subscription = $this->subscription($type)) {
+            return $subscription->items->first()?->price_id;
+        }
+
+        return null;
     }
 
     public function transactions(): MorphMany
@@ -38,20 +67,51 @@ trait Billable
             ->orderBy('created_at', 'desc');
     }
 
+    public function getTransactions()
+    {
+        return $this->transactions()->get();
+    }
+
     public function checkout(string $priceId, array $options = [])
     {
+        $defaultOptions = [
+            'success_url' => url(config('cashier-polar.success_url', '/dashboard')),
+            'payment_processor' => 'stripe',
+            'customer_name' => $this->name ?? null,
+            'customer_email' => $this->email ?? null,
+            'metadata' => [
+                'billable_id' => $this->getKey(),
+                'billable_type' => get_class($this),
+            ],
+        ];
+
+        if ($this->polarId()) {
+            $defaultOptions['customer_id'] = $this->polarId();
+        }
+
+        if (isset($options['metadata'])) {
+            $defaultOptions['metadata'] = array_merge(
+                $defaultOptions['metadata'],
+                $options['metadata']
+            );
+            unset($options['metadata']);
+        }
+
         return app(CashierPolar::class)->createCheckout(
             $priceId,
-            array_merge([
-                'success_url' => url(config('cashier-polar.success_url', '/dashboard')),
-                'customer_id' => $this->polarId(),
-            ], $options)
+            array_merge($defaultOptions, $options)
         );
     }
 
     public function polarId(): ?string
     {
         return $this->customer?->polar_id;
+    }
+
+    public function subscribed(string $type = 'default'): bool
+    {
+        $subscription = $this->subscription($type);
+        return $subscription && $subscription->valid();
     }
 
     public function onTrial(string $type = 'default'): bool
@@ -63,22 +123,15 @@ trait Billable
         return false;
     }
 
-    public function subscribed(string $type = 'default'): bool
+    public function subscribedToPlan(string $plan, string $type = 'default'): bool
     {
-        if ($subscription = $this->subscription($type)) {
-            return $subscription->valid();
+        $subscription = $this->subscription($type);
+
+        if (!$subscription || !$subscription->valid()) {
+            return false;
         }
 
-        return false;
-    }
-
-    public function hasExpiredTrial(string $type = 'default'): bool
-    {
-        if ($subscription = $this->subscription($type)) {
-            return $subscription->hasExpiredTrial();
-        }
-
-        return false;
+        return $subscription->hasPlan($plan);
     }
 
     public function onPlan(string $plan): bool
@@ -86,10 +139,11 @@ trait Billable
         return $this->subscriptions()
             ->whereHas('items', function ($query) use ($plan) {
                 $query->where('price_id', $plan);
-            })->exists();
+            })
+            ->exists();
     }
 
-    public function createOrGetCustomer(array $attributes = []): PolarCustomer
+    public function getOrCreateCustomer(array $attributes = []): PolarCustomer
     {
         if ($customer = $this->customer) {
             return $customer;
@@ -100,10 +154,40 @@ trait Billable
 
     public function createCustomer(array $attributes = []): PolarCustomer
     {
+        // First check if a customer exists with the given polar_id
+        if (isset($attributes['polar_id'])) {
+            $existingCustomer = PolarCustomer::where('polar_id', $attributes['polar_id'])->first();
+            if ($existingCustomer) {
+                // If the customer exists but isn't associated with this billable, associate it
+                if ($existingCustomer->billable_id !== $this->getKey() || $existingCustomer->billable_type !== get_class($this)) {
+                    $existingCustomer->update([
+                        'billable_id' => $this->getKey(),
+                        'billable_type' => get_class($this),
+                    ]);
+                }
+                return $existingCustomer;
+            }
+        }
+
+        // If no existing customer was found, create a new one
         if ($this->customer) {
             throw new \Exception('Customer already exists for this billable entity.');
         }
 
         return $this->customer()->create($attributes);
+    }
+
+    /**
+     * Get the default subscription.
+     *
+     * @return \Mafrasil\CashierPolar\Models\PolarSubscription|null
+     */
+    public function getSubscriptionAttribute(): ?PolarSubscription
+    {
+        try {
+            return $this->subscription() ?? null;
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 }

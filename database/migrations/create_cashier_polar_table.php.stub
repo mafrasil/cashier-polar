@@ -26,6 +26,10 @@ return new class extends Migration
             $table->string('status');
             $table->timestamp('trial_ends_at')->nullable();
             $table->timestamp('ends_at')->nullable();
+            $table->boolean('cancel_at_period_end')->default(false);
+            $table->timestamp('started_at')->nullable();
+            $table->timestamp('ended_at')->nullable();
+            $table->json('metadata')->nullable();
             $table->timestamps();
         });
 
@@ -33,9 +37,15 @@ return new class extends Migration
             $table->id();
             $table->foreignId('subscription_id');
             $table->string('product_id');
+            $table->string('product_name')->nullable();
+            $table->text('product_description')->nullable();
             $table->string('price_id');
+            $table->string('price_currency', 3);
+            $table->integer('price_amount');
+            $table->string('recurring_interval')->nullable();
             $table->string('status');
             $table->integer('quantity');
+            $table->boolean('is_archived')->default(false);
             $table->timestamps();
 
             $table->unique(['subscription_id', 'price_id']);
@@ -52,6 +62,7 @@ return new class extends Migration
             $table->decimal('tax', 8, 2);
             $table->string('currency', 3);
             $table->timestamp('billed_at');
+            $table->json('metadata')->nullable();
             $table->timestamps();
         });
     }

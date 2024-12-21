@@ -35,7 +35,7 @@ return [
     | to the sandbox URL instead of the production URL.
     |
      */
-    'sandbox' => env('POLAR_SANDBOX', false),
+    'sandbox' => env('POLAR_SANDBOX', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -61,4 +61,14 @@ return [
     |
      */
     'currency' => env('CASHIER_CURRENCY', 'USD'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Webhook Path
+    |--------------------------------------------------------------------------
+    |
+    | This is the path that will be used to receive webhooks from Polar.
+    |
+     */
+    'path' => env('POLAR_PATH', 'webhooks/polar'),
 ];
