@@ -53,7 +53,7 @@ it('can create a subscription', function () {
 
     expect($subscription->polar_id)->toBe('sub_123')
         ->and($subscription->type)->toBe('default')
-        ->and($subscription->status)->toBe('active')
+        ->and($subscription->status->value)->toBe('active')
         ->and($subscription->billable)->toBeInstanceOf(User::class)
         ->and($subscription->billable->id)->toBe($this->user->id);
 
@@ -123,6 +123,8 @@ it('can check if subscription is canceled', function () {
     $subscription->update([
         'status' => 'canceled',
         'ends_at' => now()->addDays(5),
+        'cancel_at_period_end' => true,
+        'current_period_end' => now()->addDays(5),
     ]);
 
     expect($subscription->cancelled())->toBeTrue()
@@ -154,12 +156,15 @@ it('can check if subscription is on grace period', function () {
     $subscription->update([
         'status' => 'canceled',
         'ends_at' => now()->addDays(5),
+        'cancel_at_period_end' => true,
+        'current_period_end' => now()->addDays(5),
     ]);
 
     expect($subscription->onGracePeriod())->toBeTrue();
 
     $subscription->update([
         'ends_at' => now()->subDay(),
+        'current_period_end' => now()->subDay(),
     ]);
 
     expect($subscription->onGracePeriod())->toBeFalse();
