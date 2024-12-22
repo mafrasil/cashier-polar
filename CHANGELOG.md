@@ -2,6 +2,13 @@
 
 All notable changes to `cashier-polar` will be documented in this file.
 
+## v0.2.0 - 2024-12-22
+
+- few bug fixes
+- logging and database structure improvements
+- add orders / invoicing
+- update readme
+
 ## v0.1.0  - 2024-12-21
 
 Initial release of Laravel Cashier for Polar.sh integration.
