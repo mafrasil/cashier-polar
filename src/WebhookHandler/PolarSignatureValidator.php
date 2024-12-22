@@ -11,14 +11,15 @@ class PolarSignatureValidator
     {
         $signingSecret = base64_encode(config('cashier-polar.webhook_secret'));
 
-        if (!$request->header('webhook-id') ||
-            !$request->header('webhook-signature') ||
-            !$request->header('webhook-timestamp')) {
+        if (! $request->header('webhook-id') ||
+            ! $request->header('webhook-signature') ||
+            ! $request->header('webhook-timestamp')) {
             return false;
         }
 
         try {
             $wh = new \StandardWebhooks\Webhook($signingSecret);
+
             return (bool) $wh->verify(
                 $request->getContent(),
                 [
