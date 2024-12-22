@@ -111,6 +111,7 @@ trait Billable
     public function subscribed(string $type = 'default'): bool
     {
         $subscription = $this->subscription($type);
+
         return $subscription && $subscription->valid();
     }
 
@@ -185,6 +186,7 @@ trait Billable
     public function getInvoice(string $orderId)
     {
         $response = app(CashierPolar::class)->getOrderInvoice($orderId);
+
         return $response['url'] ?? null;
     }
 }
