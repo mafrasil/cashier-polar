@@ -30,6 +30,8 @@ return new class extends Migration
             $table->timestamp('started_at')->nullable();
             $table->timestamp('ended_at')->nullable();
             $table->json('metadata')->nullable();
+            $table->timestamp('current_period_start')->nullable();
+            $table->timestamp('current_period_end')->nullable();
             $table->timestamps();
         });
 
@@ -42,6 +44,7 @@ return new class extends Migration
             $table->string('price_id');
             $table->string('price_currency', 3);
             $table->integer('price_amount');
+            $table->boolean('is_recurring')->default(false);
             $table->string('recurring_interval')->nullable();
             $table->string('status');
             $table->integer('quantity');

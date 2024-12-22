@@ -8,14 +8,14 @@ class CashierPolar
 {
     protected function baseUrl()
     {
-        return config('cashier-polar.urls.'.
+        return config('cashier-polar.urls.' .
             (config('cashier-polar.sandbox') ? 'sandbox' : 'production'));
     }
 
     protected function request()
     {
         return Http::withHeaders([
-            'Authorization' => 'Bearer '.config('cashier-polar.key'),
+            'Authorization' => 'Bearer ' . config('cashier-polar.key'),
             'Content-Type' => 'application/json',
         ])->baseUrl($this->baseUrl());
     }
@@ -61,6 +61,31 @@ class CashierPolar
             ->get("products/{$productId}", [
                 'organization_id' => config('cashier-polar.organization_id'),
             ])
+            ->json();
+    }
+
+    public function updateSubscription(string $subscription_id, string $price_id)
+    {
+        return $this->request()
+            ->patch("customer-portal/subscriptions/{$subscription_id}", [
+                'product_price_id' => $price_id,
+            ])
+            ->json();
+    }
+
+    public function getOrders(array $filters = [])
+    {
+        return $this->request()
+            ->get('customer-portal/orders/', array_merge([
+                'organization_id' => config('cashier-polar.organization_id'),
+            ], $filters))
+            ->json();
+    }
+
+    public function getOrderInvoice(string $orderId)
+    {
+        return $this->request()
+            ->get("customer-portal/orders/{$orderId}/invoice")
             ->json();
     }
 }

@@ -68,6 +68,9 @@ $checkout = $user->checkout('price_id');
 $checkout = $user->checkout('price_id', [
     'success_url' => route('checkout.success'),
     'cancel_url' => route('checkout.cancel'),
+    'metadata' => [
+        'custom_field' => 'value'
+    ]
 ]);
 
 // Redirect to checkout
@@ -85,43 +88,55 @@ echo $subscription->price;          // Get formatted price (e.g., "10.00 USD")
 echo $subscription->interval;       // Get billing interval (e.g., "month")
 echo $subscription->description;    // Get subscription description
 
-// Check status
+// Check subscription status
 if ($subscription->valid()) {
-    // Active, on trial, or on grace period
+    // Subscription is usable - returns true if any of:
+    // - Status is active
+    // - Currently on grace period after cancellation
 }
 
 if ($subscription->active()) {
-    // Currently active
+    // Subscription is in active state (not cancelled)
+    // Note: Will return false if cancelled, even during grace period
 }
 
-// Trial handling
-if ($subscription->onTrial()) {
-    echo $subscription->trialEndDate();      // "2024-01-21"
-    echo $subscription->daysUntilTrialEnds(); // Days remaining
-}
-
-// Cancellation handling
 if ($subscription->cancelled()) {
     if ($subscription->onGracePeriod()) {
-        echo $subscription->endDate();        // "2024-01-21"
-        echo $subscription->daysUntilEnds();  // Days remaining
+        // Subscription is cancelled but still usable until period ends
+    } else {
+        // Subscription is cancelled and period has ended
     }
 }
 
-// Check specific plan
-if ($user->subscribedToPlan('premium')) {
-    // Subscribed to premium plan
+if ($subscription->ended()) {
+    // Subscription is cancelled and period has ended
+}
+
+// Period information
+echo $subscription->currentPeriod();  // "2024-01-01 to 2024-02-01"
+if ($subscription->withinPeriod()) {
+    // Currently within billing period
 }
 ```
 
 ### Manage Subscriptions
 
 ```php
-// Cancel
+// Cancel subscription
 $subscription->cancel();     // End of period
 
-// Resume (during grace period)
-$subscription->resume();
+// Change subscription plan
+$subscription->change('new_price_id');
+```
+
+### Access Orders and Invoices
+
+```php
+// Get all orders
+$orders = $user->orders();
+
+// Get invoice URL for specific order
+$invoiceUrl = $user->getInvoice('order_id');
 ```
 
 ### Webhook Events
@@ -142,11 +157,12 @@ The package automatically handles these webhook events:
 ```php
 // EventServiceProvider.php
 use Mafrasil\CashierPolar\Events\SubscriptionCreated;
+use Mafrasil\CashierPolar\Events\SubscriptionCanceled;
+use Mafrasil\CashierPolar\Events\OrderCreated;
 
 Event::listen(function (SubscriptionCreated $event) {
     $subscription = $event->subscription;
     $user = $subscription->billable;
-
     // Handle event
 });
 ```

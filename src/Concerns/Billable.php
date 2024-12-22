@@ -111,17 +111,7 @@ trait Billable
     public function subscribed(string $type = 'default'): bool
     {
         $subscription = $this->subscription($type);
-
         return $subscription && $subscription->valid();
-    }
-
-    public function onTrial(string $type = 'default'): bool
-    {
-        if ($subscription = $this->subscription($type)) {
-            return $subscription->onTrial();
-        }
-
-        return false;
     }
 
     public function subscribedToPlan(string $plan, string $type = 'default'): bool
@@ -155,11 +145,9 @@ trait Billable
 
     public function createCustomer(array $attributes = []): PolarCustomer
     {
-        // First check if a customer exists with the given polar_id
         if (isset($attributes['polar_id'])) {
             $existingCustomer = PolarCustomer::where('polar_id', $attributes['polar_id'])->first();
             if ($existingCustomer) {
-                // If the customer exists but isn't associated with this billable, associate it
                 if ($existingCustomer->billable_id !== $this->getKey() || $existingCustomer->billable_type !== get_class($this)) {
                     $existingCustomer->update([
                         'billable_id' => $this->getKey(),
@@ -185,5 +173,18 @@ trait Billable
         } catch (\Exception $e) {
             return null;
         }
+    }
+
+    public function orders(array $filters = [])
+    {
+        return app(CashierPolar::class)->getOrders(array_merge([
+            'customer_id' => $this->polarId(),
+        ], $filters));
+    }
+
+    public function getInvoice(string $orderId)
+    {
+        $response = app(CashierPolar::class)->getOrderInvoice($orderId);
+        return $response['url'] ?? null;
     }
 }

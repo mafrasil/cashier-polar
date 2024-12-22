@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Mafrasil\CashierPolar\CashierPolar;
+use Mafrasil\CashierPolar\Enums\SubscriptionStatus;
 
 class PolarSubscription extends Model
 {
@@ -15,9 +16,30 @@ class PolarSubscription extends Model
 
     protected $guarded = [];
 
+    protected $appends = [
+        'name',
+        'price',
+        'price_id',
+        'product_id',
+        'active',
+        'cancelled',
+        'valid',
+        'interval',
+        'description',
+        'days_until_ends',
+        'days_until_trial_ends',
+    ];
+
+    protected $with = ['items'];
+
     protected $casts = [
         'trial_ends_at' => 'datetime',
         'ends_at' => 'datetime',
+        'current_period_start' => 'datetime',
+        'current_period_end' => 'datetime',
+        'cancel_at_period_end' => 'boolean',
+        'metadata' => 'array',
+        'status' => SubscriptionStatus::class,
     ];
 
     public function billable(): MorphTo
@@ -32,17 +54,17 @@ class PolarSubscription extends Model
 
     public function valid(): bool
     {
-        return $this->active() || $this->onTrial() || $this->onGracePeriod();
+        return $this->status->isValid() || $this->onTrial() || $this->onGracePeriod();
     }
 
     public function active(): bool
     {
-        return $this->status === 'active';
+        return $this->status === SubscriptionStatus::ACTIVE;
     }
 
     public function cancelled(): bool
     {
-        return $this->status === 'canceled';
+        return $this->status === SubscriptionStatus::CANCELED;
     }
 
     public function onTrial(): bool
@@ -60,169 +82,180 @@ class PolarSubscription extends Model
         return $this->items()->where('price_id', $plan)->exists();
     }
 
+    public function onGracePeriod(): bool
+    {
+        return $this->cancelled() &&
+        $this->cancel_at_period_end &&
+        $this->current_period_end &&
+        $this->current_period_end->isFuture();
+    }
+
+    public function recurring(): bool
+    {
+        return $this->items->first()?->is_recurring ?? false;
+    }
+
+    public function ended(): bool
+    {
+        return $this->cancelled() &&
+        $this->current_period_end &&
+        $this->current_period_end->isPast();
+    }
+
     public function cancel(): self
     {
         app(CashierPolar::class)->cancelSubscription($this->polar_id);
-
         return $this;
     }
 
-    public function resume(): self
-    {
-        if (! $this->cancelled()) {
-            throw new \LogicException('Unable to resume subscription that is not cancelled.');
-        }
-
-        $this->status = 'active';
-        $this->ends_at = null;
-        $this->save();
-
-        return $this;
-    }
-
-    /**
-     * Get the subscription name (product ID).
-     */
     public function getNameAttribute(): ?string
     {
-        if (! $this->items) {
+        if (!$this->items) {
             return null;
         }
 
         $item = $this->items->first();
-        if (! $item) {
+        if (!$item) {
             return null;
         }
 
-        return $item->product_name ?? 'Product '.$item->product_id;
+        return $item->product_name ?? 'Product ' . $item->product_id;
     }
 
-    /**
-     * Get the subscription price.
-     */
     public function getPriceAttribute(): ?string
     {
-        if (! $this->items) {
+        if (!$this->items) {
             return null;
         }
 
         $item = $this->items->first();
-        if (! $item || ! $item->price_amount || ! $item->price_currency) {
+        if (!$item || !$item->price_amount || !$item->price_currency) {
             return null;
         }
 
-        return number_format($item->price_amount / 100, 2).' '.strtoupper($item->price_currency);
+        return number_format($item->price_amount / 100, 2) . ' ' . strtoupper($item->price_currency);
     }
 
-    /**
-     * Get the billing interval.
-     */
     public function getIntervalAttribute(): ?string
     {
-        if (! $this->items) {
+        if (!$this->items) {
             return null;
         }
 
         return $this->items->first()?->recurring_interval;
     }
 
-    /**
-     * Get the subscription description.
-     */
     public function getDescriptionAttribute(): ?string
     {
-        if (! $this->items) {
+        if (!$this->items) {
             return null;
         }
 
         return $this->items->first()?->product_description;
     }
 
-    /**
-     * Get the date when the subscription ends.
-     */
     public function endsAt(): ?Carbon
     {
         return $this->ends_at;
     }
 
-    /**
-     * Determine if the subscription is within its grace period after cancellation.
-     */
-    public function onGracePeriod(): bool
-    {
-        return $this->cancelled() && $this->ends_at?->isFuture();
-    }
-
-    /**
-     * Determine if the subscription is expired.
-     */
     public function expired(): bool
     {
         return $this->ends_at && $this->ends_at->isPast();
     }
 
-    /**
-     * Get the trial end date.
-     */
     public function trialEndsAt(): ?Carbon
     {
         return $this->trial_ends_at;
     }
 
-    /**
-     * Get the subscription end date.
-     */
     public function endDate(): ?string
     {
         return $this->ends_at?->format('Y-m-d');
     }
 
-    /**
-     * Get the trial end date.
-     */
     public function trialEndDate(): ?string
     {
         return $this->trial_ends_at?->format('Y-m-d');
     }
 
-    /**
-     * Get days until subscription ends.
-     */
-    public function daysUntilEnds(): ?int
-    {
-        return $this->ends_at ? now()->diffInDays($this->ends_at) : null;
-    }
-
-    /**
-     * Get days until trial ends.
-     */
-    public function daysUntilTrialEnds(): ?int
-    {
-        return $this->trial_ends_at ? now()->diffInDays($this->trial_ends_at) : null;
-    }
-
-    /**
-     * Get the subscription product ID.
-     */
     public function getProductIdAttribute(): ?string
     {
-        if (! $this->items) {
+        if (!$this->items) {
             return null;
         }
 
         return $this->items->first()?->product_id;
     }
 
-    /**
-     * Get the subscription price ID.
-     */
     public function getPriceIdAttribute(): ?string
     {
-        if (! $this->items) {
+        if (!$this->items) {
             return null;
         }
 
         return $this->items->first()?->price_id;
+    }
+
+    public function currentPeriodStart(): ?Carbon
+    {
+        return $this->current_period_start;
+    }
+
+    public function currentPeriodEnd(): ?Carbon
+    {
+        return $this->current_period_end;
+    }
+
+    public function daysUntilPeriodEnds(): ?int
+    {
+        return $this->current_period_end ? now()->diffInDays($this->current_period_end) : null;
+    }
+
+    public function currentPeriod(): ?string
+    {
+        if (!$this->current_period_start || !$this->current_period_end) {
+            return null;
+        }
+
+        return $this->current_period_start->format('Y-m-d') . ' to ' . $this->current_period_end->format('Y-m-d');
+    }
+
+    public function withinPeriod(): bool
+    {
+        return $this->current_period_start &&
+        $this->current_period_end &&
+        now()->between($this->current_period_start, $this->current_period_end);
+    }
+
+    public function change(string $priceId): self
+    {
+        app(CashierPolar::class)->updateSubscription($this->polar_id, $priceId);
+        return $this;
+    }
+
+    public function getActiveAttribute(): bool
+    {
+        return $this->active();
+    }
+
+    public function getCancelledAttribute(): bool
+    {
+        return $this->cancelled();
+    }
+
+    public function getValidAttribute(): bool
+    {
+        return $this->valid();
+    }
+
+    public function getDaysUntilEndsAttribute(): ?int
+    {
+        return $this->ends_at ? now()->diffInDays($this->ends_at) : null;
+    }
+
+    public function getDaysUntilTrialEndsAttribute(): ?int
+    {
+        return $this->trial_ends_at ? now()->diffInDays($this->trial_ends_at) : null;
     }
 }
