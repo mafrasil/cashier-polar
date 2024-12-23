@@ -59,7 +59,7 @@ POLAR_WEBHOOK_SECRET=your-webhook-secret
 POLAR_SANDBOX=true # Set to false for production
 ```
 
-Generate a webhook secret:
+Generate a webhook secret or grab it from your Polar Webhook settings:
 
 ```bash
 php artisan cashier-polar:webhook-secret
@@ -112,15 +112,12 @@ echo $subscription->description;    // Get subscription description
 if ($subscription->active()) {
     // Subscription is usable if any of:
     // - Status is active
-    // - Currently on trial
     // - Currently on grace period after cancellation
 }
 
 if ($subscription->cancelled()) {
     if ($subscription->onGracePeriod()) {
-        // Subscription is cancelled but still usable until period ends
-    } else {
-        // Subscription is cancelled and period has ended
+        // Subscription is cancelled and on grace period
     }
 }
 
