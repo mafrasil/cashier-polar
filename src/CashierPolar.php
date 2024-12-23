@@ -8,14 +8,14 @@ class CashierPolar
 {
     protected function baseUrl()
     {
-        return config('cashier-polar.urls.' .
+        return config('cashier-polar.urls.'.
             (config('cashier-polar.sandbox') ? 'sandbox' : 'production'));
     }
 
     protected function request()
     {
         return Http::withHeaders([
-            'Authorization' => 'Bearer ' . config('cashier-polar.key'),
+            'Authorization' => 'Bearer '.config('cashier-polar.key'),
             'Content-Type' => 'application/json',
         ])->baseUrl($this->baseUrl());
     }

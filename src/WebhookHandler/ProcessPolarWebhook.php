@@ -408,12 +408,14 @@ class ProcessPolarWebhook implements ShouldQueue
 
         if (!$billable) {
             logger()->error('No billable found for customer_id: ' . ($data['customer_id'] ?? 'null'));
+
             return false;
         }
 
         $subscription = $billable->subscriptions()->where('polar_id', $data['id'] ?? null)->first();
         if (!$subscription) {
             logger()->error('No subscription found for polar_id: ' . ($data['id'] ?? 'null'));
+
             return false;
         }
 
