@@ -2,6 +2,10 @@
 
 All notable changes to `cashier-polar` will be documented in this file.
 
+## v0.2.2 - 2024-12-23
+
+- fix cancellation methods / grace period
+
 ## v0.2.1 - 2024-12-23
 
 - add products endpoint
