@@ -2,6 +2,11 @@
 
 All notable changes to `cashier-polar` will be documented in this file.
 
+## v0.2.1 - 2024-12-23
+
+- add products endpoint
+- few other tweaks
+
 ## v0.2.0 - 2024-12-22
 
 - few bug fixes
