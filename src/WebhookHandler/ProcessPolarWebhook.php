@@ -322,15 +322,19 @@ class ProcessPolarWebhook implements ShouldQueue
                 ]);
             }
 
-            $billable->transactions()->create([
-                'polar_id' => $data['id'] . '_' . now()->timestamp,
-                'polar_subscription_id' => $data['id'],
-                'status' => 'completed',
-                'total' => $data['price']['amount'] ?? $data['amount'] ?? 0,
-                'tax' => $data['tax_amount'] ?? 0,
-                'currency' => $data['price']['currency'] ?? $data['currency'],
-                'billed_at' => now(),
-            ]);
+            $transactionId = $data['id'] . '_' . now()->timestamp;
+
+            $billable->transactions()->updateOrCreate(
+                ['polar_id' => $transactionId],
+                [
+                    'polar_subscription_id' => $data['id'],
+                    'status' => 'completed',
+                    'total' => $data['price']['amount'] ?? $data['amount'] ?? 0,
+                    'tax' => $data['tax_amount'] ?? 0,
+                    'currency' => $data['price']['currency'] ?? $data['currency'],
+                    'billed_at' => now(),
+                ]
+            );
 
             event(new \Mafrasil\CashierPolar\Events\SubscriptionActive($subscription, $payload));
 
@@ -425,7 +429,6 @@ class ProcessPolarWebhook implements ShouldQueue
             'cancel_at_period_end' => $data['cancel_at_period_end'] ?? false,
         ]);
 
-        // Update subscription item with new price information
         if ($item = $subscription->items()->first()) {
             $item->update([
                 'price_id' => $data['price_id'],
@@ -437,17 +440,20 @@ class ProcessPolarWebhook implements ShouldQueue
             ]);
         }
 
-        // Create transaction record if amount is present
         if (isset($data['amount']) || isset($data['price']['amount'])) {
-            $billable->transactions()->create([
-                'polar_id' => $data['id'] . '_' . now()->timestamp,
-                'polar_subscription_id' => $data['id'],
-                'status' => 'completed',
-                'total' => $data['price']['amount'] ?? $data['amount'] ?? 0,
-                'tax' => $data['tax_amount'] ?? 0,
-                'currency' => $data['price']['currency'] ?? $data['currency'],
-                'billed_at' => now(),
-            ]);
+            $transactionId = $data['id'] . '_' . now()->timestamp;
+
+            $billable->transactions()->updateOrCreate(
+                ['polar_id' => $transactionId],
+                [
+                    'polar_subscription_id' => $data['id'],
+                    'status' => 'completed',
+                    'total' => $data['price']['amount'] ?? $data['amount'] ?? 0,
+                    'tax' => $data['tax_amount'] ?? 0,
+                    'currency' => $data['price']['currency'] ?? $data['currency'],
+                    'billed_at' => now(),
+                ]
+            );
         }
 
         event(new \Mafrasil\CashierPolar\Events\SubscriptionUpdated($subscription, $payload));

@@ -9,25 +9,23 @@ class PolarSignatureValidator
 {
     public function isValid(Request $request): bool
     {
-        $signingSecret = base64_encode(config('cashier-polar.webhook_secret'));
-
-        if (! $request->header('webhook-id') ||
-            ! $request->header('webhook-signature') ||
-            ! $request->header('webhook-timestamp')) {
+        if (!$request->header('webhook-id') ||
+            !$request->header('webhook-signature') ||
+            !$request->header('webhook-timestamp')) {
             return false;
         }
 
         try {
-            $wh = new \StandardWebhooks\Webhook($signingSecret);
+            $secret = config('cashier-polar.webhook_secret');
+            $payload = $request->getContent();
+            $timestamp = $request->header('webhook-timestamp');
+            $webhookId = $request->header('webhook-id');
 
-            return (bool) $wh->verify(
-                $request->getContent(),
-                [
-                    'webhook-id' => $request->header('webhook-id'),
-                    'webhook-signature' => $request->header('webhook-signature'),
-                    'webhook-timestamp' => $request->header('webhook-timestamp'),
-                ]
-            );
+            $signatureMessage = $webhookId . '.' . $timestamp . '.' . $payload;
+            $hmac = hash_hmac('sha256', $signatureMessage, $secret, true);
+            $expectedSignature = 'v1,' . base64_encode($hmac);
+
+            return hash_equals($expectedSignature, $request->header('webhook-signature'));
 
         } catch (\Exception $e) {
             Log::error('Polar Webhook Validation Error', [
