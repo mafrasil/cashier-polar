@@ -111,6 +111,7 @@ trait Billable
     public function subscribed(string $type = 'default'): bool
     {
         $subscription = $this->subscription($type);
+
         return $subscription && $subscription->active();
     }
 
@@ -118,7 +119,7 @@ trait Billable
     {
         $subscription = $this->subscription($type);
 
-        if (!$subscription || !$subscription->active()) {
+        if (! $subscription || ! $subscription->active()) {
             return false;
         }
 
