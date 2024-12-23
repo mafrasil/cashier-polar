@@ -5,9 +5,29 @@
 [![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/mafrasil/cashier-polar/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/mafrasil/cashier-polar/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/mafrasil/cashier-polar.svg?style=flat-square)](https://packagist.org/packages/mafrasil/cashier-polar)
 
+## Table of Contents
+
+-   [Disclaimer](#disclaimer)
+-   [Introduction](#introduction)
+-   [Requirements](#requirements)
+-   [Installation](#installation)
+-   [Configuration](#configuration)
+-   [Basic Usage](#basic-usage)
+    -   [Setup Billable Model](#setup-billable-model)
+    -   [Create a Checkout Session](#create-a-checkout-session)
+    -   [Access Subscriptions](#access-subscriptions)
+    -   [Manage Subscriptions](#manage-subscriptions)
+    -   [Products and Pricing](#products-and-pricing)
+    -   [Orders and Invoices](#orders-and-invoices)
+    -   [Webhook Events](#webhook-events)
+    -   [Listen for Events](#listen-for-events)
+-   [Testing](#testing)
+-   [Credits](#credits)
+-   [License](#license)
+
 ## Disclaimer
 
-> **Note**: This is not an official Laravel package. This is a community-built package following Laravel Cashier principles and is currently a work in progress.
+> **Note**: This is not an official Laravel package. This is a community-built package following Laravel Cashier principles.
 
 ## Introduction
 
@@ -89,15 +109,11 @@ echo $subscription->interval;       // Get billing interval (e.g., "month")
 echo $subscription->description;    // Get subscription description
 
 // Check subscription status
-if ($subscription->valid()) {
-    // Subscription is usable - returns true if any of:
-    // - Status is active
-    // - Currently on grace period after cancellation
-}
-
 if ($subscription->active()) {
-    // Subscription is in active state (not cancelled)
-    // Note: Will return false if cancelled, even during grace period
+    // Subscription is usable if any of:
+    // - Status is active
+    // - Currently on trial
+    // - Currently on grace period after cancellation
 }
 
 if ($subscription->cancelled()) {
@@ -122,18 +138,42 @@ if ($subscription->withinPeriod()) {
 ### Manage Subscriptions
 
 ```php
-// Cancel subscription
-$subscription->cancel();     // End of period
+// Cancel subscription (End of period)
+$subscription->cancel();
 
 // Change subscription plan
 $subscription->change('new_price_id');
 ```
 
-### Access Orders and Invoices
+### Products and Pricing
 
 ```php
-// Get all orders
+use Mafrasil\CashierPolar\Facades\CashierPolar;
+
+// Get all products
+$products = CashierPolar::products();
+
+// Get specific product
+$product = CashierPolar::product('product_id');
+
+// Get products with filters
+$products = CashierPolar::products([
+    'is_archived' => true,
+    // other filters...
+]);
+```
+
+### Orders and Invoices
+
+```php
+// Get all orders for a user
 $orders = $user->orders();
+
+// Get orders with filters
+$orders = $user->orders([
+    'status' => 'completed',
+    // other filters...
+]);
 
 // Get invoice URL for specific order
 $invoiceUrl = $user->getInvoice('order_id');

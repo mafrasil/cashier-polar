@@ -111,14 +111,14 @@ trait Billable
     public function subscribed(string $type = 'default'): bool
     {
         $subscription = $this->subscription($type);
-        return $subscription && $subscription->valid();
+        return $subscription && $subscription->active();
     }
 
     public function subscribedToPlan(string $plan, string $type = 'default'): bool
     {
         $subscription = $this->subscription($type);
 
-        if (! $subscription || ! $subscription->valid()) {
+        if (!$subscription || !$subscription->active()) {
             return false;
         }
 

@@ -23,7 +23,6 @@ class PolarSubscription extends Model
         'product_id',
         'active',
         'cancelled',
-        'valid',
         'interval',
         'description',
         'days_until_ends',
@@ -52,14 +51,9 @@ class PolarSubscription extends Model
         return $this->hasMany(PolarSubscriptionItem::class, 'subscription_id');
     }
 
-    public function valid(): bool
-    {
-        return $this->status->isValid() || $this->onTrial() || $this->onGracePeriod();
-    }
-
     public function active(): bool
     {
-        return $this->status === SubscriptionStatus::ACTIVE;
+        return $this->status === SubscriptionStatus::ACTIVE || $this->onTrial() || $this->onGracePeriod();
     }
 
     public function cancelled(): bool
@@ -242,11 +236,6 @@ class PolarSubscription extends Model
     public function getCancelledAttribute(): bool
     {
         return $this->cancelled();
-    }
-
-    public function getValidAttribute(): bool
-    {
-        return $this->valid();
     }
 
     public function getDaysUntilEndsAttribute(): ?int
