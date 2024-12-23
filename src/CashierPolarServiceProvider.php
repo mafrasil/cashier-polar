@@ -48,12 +48,12 @@ class CashierPolarServiceProvider extends PackageServiceProvider
             try {
                 $validator = new PolarSignatureValidator;
 
-                if (!$validator->isValid($request)) {
+                if (! $validator->isValid($request)) {
                     Log::error('Polar webhook signature validation failed', [
                         'webhook_id' => $request->header('webhook-id'),
                         'webhook_timestamp' => $request->header('webhook-timestamp'),
                         // Don't log the full signature for security
-                        'has_signature' => !empty($request->header('webhook-signature')),
+                        'has_signature' => ! empty($request->header('webhook-signature')),
                         'content_length' => strlen($request->getContent()),
                     ]);
 
