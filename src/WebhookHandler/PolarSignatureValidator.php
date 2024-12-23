@@ -9,9 +9,9 @@ class PolarSignatureValidator
 {
     public function isValid(Request $request): bool
     {
-        if (!$request->header('webhook-id') ||
-            !$request->header('webhook-signature') ||
-            !$request->header('webhook-timestamp')) {
+        if (! $request->header('webhook-id') ||
+            ! $request->header('webhook-signature') ||
+            ! $request->header('webhook-timestamp')) {
             return false;
         }
 
@@ -21,9 +21,9 @@ class PolarSignatureValidator
             $timestamp = $request->header('webhook-timestamp');
             $webhookId = $request->header('webhook-id');
 
-            $signatureMessage = $webhookId . '.' . $timestamp . '.' . $payload;
+            $signatureMessage = $webhookId.'.'.$timestamp.'.'.$payload;
             $hmac = hash_hmac('sha256', $signatureMessage, $secret, true);
-            $expectedSignature = 'v1,' . base64_encode($hmac);
+            $expectedSignature = 'v1,'.base64_encode($hmac);
 
             return hash_equals($expectedSignature, $request->header('webhook-signature'));
 
