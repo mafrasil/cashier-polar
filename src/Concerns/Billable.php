@@ -185,6 +185,7 @@ trait Billable
     public function getInvoice(string $orderId)
     {
         $response = app(CashierPolar::class)->getOrderInvoice($orderId);
+
         return $response['url'] ?? null;
     }
 }

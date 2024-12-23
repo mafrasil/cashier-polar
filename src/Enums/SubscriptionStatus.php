@@ -2,7 +2,8 @@
 
 namespace Mafrasil\CashierPolar\Enums;
 
-enum SubscriptionStatus: string {
+enum SubscriptionStatus: string
+{
     case INCOMPLETE = 'incomplete';
     case ACTIVE = 'active';
     case CANCELED = 'canceled';
