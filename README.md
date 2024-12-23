@@ -104,9 +104,9 @@ return redirect($checkout['url']);
 $subscription = $user->subscription;
 
 echo $subscription->name;            // Get subscription name
-echo $subscription->price;          // Get formatted price (e.g., "10.00 USD")
-echo $subscription->interval;       // Get billing interval (e.g., "month")
-echo $subscription->description;    // Get subscription description
+echo $subscription->price;           // Get formatted price (e.g., "10.00 USD")
+echo $subscription->interval;        // Get billing interval (e.g., "month")
+echo $subscription->description;     // Get subscription description
 
 // Check subscription status
 if ($subscription->active()) {
@@ -140,6 +140,20 @@ $subscription->cancel();
 
 // Change subscription plan
 $subscription->change('new_price_id');
+
+// Check subscription states
+$subscription->onGracePeriod();         // Check if scheduled for cancellation
+$subscription->cancelled();             // Check if cancelled
+$subscription->active();                // Check if subscription is active
+
+// Example usage
+if ($subscription->onGracePeriod()) {
+    echo "Subscription will cancel on " . $subscription->ends_at->format('Y-m-d');
+} elseif ($subscription->cancelled()) {
+    echo "Subscription has been cancelled";
+} else {
+    echo "Active " . $subscription->interval . " subscription";
+}
 ```
 
 ### Products and Pricing

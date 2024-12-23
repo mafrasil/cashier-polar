@@ -119,7 +119,7 @@ trait Billable
     {
         $subscription = $this->subscription($type);
 
-        if (! $subscription || ! $subscription->active()) {
+        if (!$subscription || !$subscription->active()) {
             return false;
         }
 
