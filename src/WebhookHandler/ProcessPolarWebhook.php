@@ -16,7 +16,8 @@ class ProcessPolarWebhook implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public function __construct(protected array $payload) {}
+    public function __construct(protected array $payload)
+    {}
 
     public function handle()
     {
@@ -63,9 +64,12 @@ class ProcessPolarWebhook implements ShouldQueue
     {
         $data = $payload['data'] ?? $payload;
 
-        $billable = $this->getBillableFromCustomerId($data['customer_id'] ?? null);
+        $billable = $this->getBillableFromCustomerId(
+            $data['customer_id'] ?? null,
+            $data['metadata'] ?? null
+        );
 
-        if (! $billable && isset($data['metadata']['billable_id'], $data['metadata']['billable_type'])) {
+        if (!$billable && isset($data['metadata']['billable_id'], $data['metadata']['billable_type'])) {
             $billableType = $data['metadata']['billable_type'];
             $billable = $billableType::find($data['metadata']['billable_id']);
 
@@ -78,8 +82,8 @@ class ProcessPolarWebhook implements ShouldQueue
             }
         }
 
-        if (! $billable) {
-            logger()->error('No billable found for customer_id: '.($data['customer_id'] ?? 'null').' or billable_id: '.($data['metadata']['billable_id'] ?? 'not provided'));
+        if (!$billable) {
+            logger()->error('No billable found for customer_id: ' . ($data['customer_id'] ?? 'null') . ' or billable_id: ' . ($data['metadata']['billable_id'] ?? 'not provided'));
 
             return false;
         }
@@ -103,17 +107,20 @@ class ProcessPolarWebhook implements ShouldQueue
     {
         $data = $payload['data'] ?? $payload;
 
-        $billable = $this->getBillableFromCustomerId($data['customer_id'] ?? null);
+        $billable = $this->getBillableFromCustomerId(
+            $data['customer_id'] ?? null,
+            $data['metadata'] ?? null
+        );
 
-        if (! $billable) {
-            logger()->error('No billable found for customer_id: '.($data['customer_id'] ?? 'null'));
+        if (!$billable) {
+            logger()->error('No billable found for customer_id: ' . ($data['customer_id'] ?? 'null'));
 
             return false;
         }
 
         $transaction = $billable->transactions()->where('checkout_id', $data['id'] ?? null)->first();
-        if (! $transaction) {
-            logger()->error('No transaction found for checkout_id: '.($data['id'] ?? 'null'));
+        if (!$transaction) {
+            logger()->error('No transaction found for checkout_id: ' . ($data['id'] ?? 'null'));
 
             return false;
         }
@@ -131,9 +138,12 @@ class ProcessPolarWebhook implements ShouldQueue
     {
         $data = $payload['data'] ?? $payload;
 
-        $billable = $this->getBillableFromCustomerId($data['customer_id'] ?? null);
+        $billable = $this->getBillableFromCustomerId(
+            $data['customer_id'] ?? null,
+            $data['metadata'] ?? null
+        );
 
-        if (! $billable && isset($data['metadata']['billable_id'], $data['metadata']['billable_type'])) {
+        if (!$billable && isset($data['metadata']['billable_id'], $data['metadata']['billable_type'])) {
             $billableType = $data['metadata']['billable_type'];
             $billable = $billableType::find($data['metadata']['billable_id']);
 
@@ -146,8 +156,8 @@ class ProcessPolarWebhook implements ShouldQueue
             }
         }
 
-        if (! $billable) {
-            logger()->error('No billable found for customer_id: '.($data['customer_id'] ?? 'null'));
+        if (!$billable) {
+            logger()->error('No billable found for customer_id: ' . ($data['customer_id'] ?? 'null'));
 
             return false;
         }
@@ -178,9 +188,12 @@ class ProcessPolarWebhook implements ShouldQueue
             $data = $payload['data'] ?? $payload;
             logger()->info('Processing subscription created', $data);
 
-            $billable = $this->getBillableFromCustomerId($data['customer_id'] ?? null);
+            $billable = $this->getBillableFromCustomerId(
+                $data['customer_id'] ?? null,
+                $data['metadata'] ?? null
+            );
 
-            if (! $billable && isset($data['metadata']['billable_id'], $data['metadata']['billable_type'])) {
+            if (!$billable && isset($data['metadata']['billable_id'], $data['metadata']['billable_type'])) {
                 $billableType = $data['metadata']['billable_type'];
                 $billable = $billableType::find($data['metadata']['billable_id']);
 
@@ -193,8 +206,8 @@ class ProcessPolarWebhook implements ShouldQueue
                 }
             }
 
-            if (! $billable) {
-                logger()->error('No billable found for customer_id: '.($data['customer_id'] ?? 'null'));
+            if (!$billable) {
+                logger()->error('No billable found for customer_id: ' . ($data['customer_id'] ?? 'null'));
 
                 return false;
             }
@@ -204,7 +217,11 @@ class ProcessPolarWebhook implements ShouldQueue
             $status = match ($data['status'] ?? 'incomplete') {
                 'active' => SubscriptionStatus::ACTIVE->value,
                 'canceled' => SubscriptionStatus::CANCELED->value,
-                'revoked' => SubscriptionStatus::REVOKED->value,
+                'past_due' => SubscriptionStatus::PAST_DUE->value,
+                'unpaid' => SubscriptionStatus::UNPAID->value,
+                'incomplete' => SubscriptionStatus::INCOMPLETE->value,
+                'incomplete_expired' => SubscriptionStatus::INCOMPLETE_EXPIRED->value,
+                'trialing' => SubscriptionStatus::TRIALING->value,
                 default => SubscriptionStatus::INCOMPLETE->value,
             };
 
@@ -277,17 +294,20 @@ class ProcessPolarWebhook implements ShouldQueue
                 'price' => $data['price'] ?? null,
             ]);
 
-            $billable = $this->getBillableFromCustomerId($data['customer_id']);
+            $billable = $this->getBillableFromCustomerId(
+                $data['customer_id'] ?? null,
+                $data['metadata'] ?? null
+            );
 
-            if (! $billable) {
-                logger()->error('No billable found for customer_id: '.$data['customer_id']);
+            if (!$billable) {
+                logger()->error('No billable found for customer_id: ' . $data['customer_id']);
 
                 return false;
             }
 
             $subscription = $billable->subscriptions()->where('polar_id', $data['id'])->first();
-            if (! $subscription) {
-                logger()->error('No subscription found for polar_id: '.$data['id']);
+            if (!$subscription) {
+                logger()->error('No subscription found for polar_id: ' . $data['id']);
 
                 return false;
             }
@@ -321,7 +341,7 @@ class ProcessPolarWebhook implements ShouldQueue
                 ]);
             }
 
-            $transactionId = $data['id'].'_'.now()->timestamp;
+            $transactionId = $data['id'] . '_' . now()->timestamp;
 
             $billable->transactions()->updateOrCreate(
                 ['polar_id' => $transactionId],
@@ -345,23 +365,25 @@ class ProcessPolarWebhook implements ShouldQueue
     {
         $data = $payload['data'] ?? $payload;
 
-        $billable = $this->getBillableFromCustomerId($data['customer_id'] ?? null);
+        $billable = $this->getBillableFromCustomerId(
+            $data['customer_id'] ?? null,
+            $data['metadata'] ?? null
+        );
 
-        if (! $billable) {
-            logger()->error('No billable found for customer_id: '.($data['customer_id'] ?? 'null'));
+        if (!$billable) {
+            logger()->error('No billable found for customer_id: ' . ($data['customer_id'] ?? 'null'));
 
             return false;
         }
 
         $subscription = $billable->subscriptions()->where('polar_id', $data['id'] ?? null)->first();
-        if (! $subscription) {
-            logger()->error('No subscription found for polar_id: '.($data['id'] ?? 'null'));
+        if (!$subscription) {
+            logger()->error('No subscription found for polar_id: ' . ($data['id'] ?? 'null'));
 
             return false;
         }
 
         $subscription->update([
-            'status' => 'canceled',
             'ends_at' => isset($data['current_period_end'])
             ? now()->parse($data['current_period_end'])
             : now(),
@@ -374,17 +396,20 @@ class ProcessPolarWebhook implements ShouldQueue
 
     protected function handleSubscriptionRevoked(array $payload): bool
     {
-        $billable = $this->getBillableFromCustomerId($payload['customer_id']);
+        $billable = $this->getBillableFromCustomerId(
+            $payload['customer_id'] ?? null,
+            $payload['metadata'] ?? null
+        );
 
-        if (! $billable) {
-            logger()->error('No billable found for customer_id: '.$payload['customer_id']);
+        if (!$billable) {
+            logger()->error('No billable found for customer_id: ' . $payload['customer_id']);
 
             return false;
         }
 
         $subscription = $billable->subscriptions()->where('polar_id', $payload['id'])->first();
-        if (! $subscription) {
-            logger()->error('No subscription found for polar_id: '.$payload['id']);
+        if (!$subscription) {
+            logger()->error('No subscription found for polar_id: ' . $payload['id']);
 
             return false;
         }
@@ -403,17 +428,20 @@ class ProcessPolarWebhook implements ShouldQueue
     {
         $data = $payload['data'] ?? $payload;
 
-        $billable = $this->getBillableFromCustomerId($data['customer_id'] ?? null);
+        $billable = $this->getBillableFromCustomerId(
+            $data['customer_id'] ?? null,
+            $data['metadata'] ?? null
+        );
 
-        if (! $billable) {
-            logger()->error('No billable found for customer_id: '.($data['customer_id'] ?? 'null'));
+        if (!$billable) {
+            logger()->error('No billable found for customer_id: ' . ($data['customer_id'] ?? 'null'));
 
             return false;
         }
 
         $subscription = $billable->subscriptions()->where('polar_id', $data['id'] ?? null)->first();
-        if (! $subscription) {
-            logger()->error('No subscription found for polar_id: '.($data['id'] ?? 'null'));
+        if (!$subscription) {
+            logger()->error('No subscription found for polar_id: ' . ($data['id'] ?? 'null'));
 
             return false;
         }
@@ -442,7 +470,7 @@ class ProcessPolarWebhook implements ShouldQueue
         }
 
         if (isset($data['amount']) || isset($data['price']['amount'])) {
-            $transactionId = $data['id'].'_'.now()->timestamp;
+            $transactionId = $data['id'] . '_' . now()->timestamp;
 
             $billable->transactions()->updateOrCreate(
                 ['polar_id' => $transactionId],
@@ -469,32 +497,27 @@ class ProcessPolarWebhook implements ShouldQueue
         return false;
     }
 
-    protected function getBillableFromCustomerId(?string $customerId)
+    protected function getBillableFromCustomerId(?string $customerId, ?array $metadata = null)
     {
-        if (! $customerId) {
-            logger()->error('Null customer_id provided to getBillableFromCustomerId', [
-                'trace' => debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS),
-            ]);
+        if ($metadata && isset($metadata['billable_id'], $metadata['billable_type'])) {
+            $billableType = $metadata['billable_type'];
+            $billable = $billableType::find($metadata['billable_id']);
 
-            return null;
+            if ($billable) {
+                return $billable;
+            }
         }
 
-        $customer = PolarCustomer::where('polar_id', $customerId)->first();
+        if ($customerId) {
+            $customer = PolarCustomer::where('polar_id', $customerId)->first();
 
-        if (! $customer) {
-            logger()->error('No Polar customer found for customer_id: '.$customerId);
+            if ($customer && $customer->billable) {
+                return $customer->billable;
+            }
 
-            return null;
+            logger()->error('No valid billable found for Polar customer: ' . $customerId);
         }
 
-        $billable = $customer->billable;
-
-        if (! $billable) {
-            logger()->error('Billable relation not found for Polar customer: '.$customerId);
-
-            return null;
-        }
-
-        return $billable;
+        return null;
     }
 }
