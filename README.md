@@ -5,10 +5,16 @@
 [![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/mafrasil/cashier-polar/fix-php-code-style-issues.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/mafrasil/cashier-polar/actions?query=workflow%3A"Fix+PHP+code+style+issues"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/mafrasil/cashier-polar.svg?style=flat-square)](https://packagist.org/packages/mafrasil/cashier-polar)
 
+## Disclaimer
+
+> **Note**: This is not an official Laravel package. This is a community-built package following Laravel Cashier principles.
+
+## Introduction
+
+Cashier Polar provides an expressive, fluent interface to [Polar's](https://polar.sh) subscription billing services. It handles almost all of the boilerplate subscription billing code you are dreading writing.
+
 ## Table of Contents
 
--   [Disclaimer](#disclaimer)
--   [Introduction](#introduction)
 -   [Requirements](#requirements)
 -   [Installation](#installation)
 -   [Configuration](#configuration)
@@ -24,14 +30,6 @@
 -   [Testing](#testing)
 -   [Credits](#credits)
 -   [License](#license)
-
-## Disclaimer
-
-> **Note**: This is not an official Laravel package. This is a community-built package following Laravel Cashier principles.
-
-## Introduction
-
-Cashier Polar provides an expressive, fluent interface to [Polar's](https://polar.sh) subscription billing services. It handles almost all of the boilerplate subscription billing code you are dreading writing.
 
 ## Requirements
 
