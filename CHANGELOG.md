@@ -2,6 +2,10 @@
 
 All notable changes to `cashier-polar` will be documented in this file.
 
+## v0.2.4 - 2024-12-27
+
+- fix billable and canceled status
+
 ## v0.2.3 - 2024-12-23
 
 - update webhook signature validator
