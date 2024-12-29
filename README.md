@@ -115,36 +115,25 @@ if ($subscription->active()) {
     // - Currently on grace period after cancellation
 }
 
-if ($subscription->cancelled()) {
-    if ($subscription->onGracePeriod()) {
-        // Subscription is cancelled and on grace period
-    }
-}
+// Subscription has been cancelled and on grace period (within billing period)
+if ($subscription->onGracePeriod()) {}
 
-if ($subscription->ended()) {
-    // Subscription is cancelled and period has ended
-}
+// Subscription has been cancelled and grace period has ended (outside billing period)
+if ($subscription->cancelled()) {}
 
 // Period information
 echo $subscription->currentPeriod();  // "2024-01-01 to 2024-02-01"
-if ($subscription->withinPeriod()) {
-    // Currently within billing period
-}
+if ($subscription->withinPeriod()) {}
 ```
 
 ### Manage Subscriptions
 
 ```php
-// Cancel subscription (End of period)
-$subscription->cancel();
-
-// Change subscription plan
-$subscription->change('new_price_id');
-
-// Check subscription states
-$subscription->onGracePeriod();         // Check if scheduled for cancellation
-$subscription->cancelled();             // Check if cancelled
-$subscription->active();                // Check if subscription is active
+$subscription->cancel();                    // Cancel subscription (End of period)
+$subscription->change('new_price_id');      // Change subscription plan
+$subscription->onGracePeriod();             // Check if scheduled for cancellation
+$subscription->cancelled();                 // Check if cancelled
+$subscription->active();                    // Check if subscription is active
 
 // Example usage
 if ($subscription->onGracePeriod()) {
