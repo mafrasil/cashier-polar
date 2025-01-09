@@ -190,6 +190,31 @@ The package automatically handles these webhook events:
 -   `subscription.revoked`
 -   `subscription.canceled`
 
+#### Webhook Configuration
+
+By default, Cashier Polar listens for webhooks at `/webhooks/polar`. You can customize this path in your `config/cashier-polar.php` configuration file:
+
+```php
+'path' => 'custom/webhook/path'
+```
+
+Make sure to configure your webhook URL in your Polar dashboard to match your application's webhook endpoint:
+
+-   URL: `https://your-domain.com/webhooks/polar` (or your custom path)
+-   Secret: Use the value from your `POLAR_WEBHOOK_SECRET` environment variable
+
+The package automatically validates webhook signatures to ensure they come from Polar and logs all incoming webhook data for debugging purposes.
+
+#### Local Testing with Ngrok
+
+For local development, you can use [Ngrok](https://ngrok.com) to create a secure tunnel to your local application:
+
+```bash
+ngrok http 8000
+```
+
+Then use the generated Ngrok URL (e.g., `https://random-string.ngrok.io/webhooks/polar`) as your webhook endpoint in the Polar dashboard. This allows you to receive and test webhooks during local development.
+
 ### Listen for Events
 
 ```php
