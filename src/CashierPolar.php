@@ -80,7 +80,7 @@ class CashierPolar
         }
 
         return $this->request()
-            ->get('customer-portal/orders/', array_merge([
+            ->get('orders/', array_merge([
                 'organization_id' => config('cashier-polar.organization_id'),
                 'customer_id' => $filters['customer_id'],
             ], $filters))
