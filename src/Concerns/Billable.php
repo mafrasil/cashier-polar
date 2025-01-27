@@ -119,7 +119,7 @@ trait Billable
     {
         $subscription = $this->subscription($type);
 
-        if (!$subscription || !$subscription->active()) {
+        if (! $subscription || ! $subscription->active()) {
             return false;
         }
 
@@ -178,7 +178,7 @@ trait Billable
 
     public function orders(array $filters = [])
     {
-        if (!$this->polarId()) {
+        if (! $this->polarId()) {
             return []; // Return empty array if no Polar customer ID exists
         }
 
