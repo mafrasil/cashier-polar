@@ -8,14 +8,14 @@ class CashierPolar
 {
     protected function baseUrl()
     {
-        return config('cashier-polar.urls.'.
+        return config('cashier-polar.urls.' .
             (config('cashier-polar.sandbox') ? 'sandbox' : 'production'));
     }
 
     protected function request()
     {
         return Http::withHeaders([
-            'Authorization' => 'Bearer '.config('cashier-polar.key'),
+            'Authorization' => 'Bearer ' . config('cashier-polar.key'),
             'Content-Type' => 'application/json',
         ])->baseUrl($this->baseUrl());
     }
@@ -75,9 +75,14 @@ class CashierPolar
 
     public function getOrders(array $filters = [])
     {
+        if (empty($filters['customer_id'])) {
+            throw new \InvalidArgumentException('customer_id is required to fetch orders');
+        }
+
         return $this->request()
             ->get('customer-portal/orders/', array_merge([
                 'organization_id' => config('cashier-polar.organization_id'),
+                'customer_id' => $filters['customer_id'],
             ], $filters))
             ->json();
     }
