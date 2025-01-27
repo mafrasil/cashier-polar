@@ -8,14 +8,14 @@ class CashierPolar
 {
     protected function baseUrl()
     {
-        return config('cashier-polar.urls.'.
+        return config('cashier-polar.urls.' .
             (config('cashier-polar.sandbox') ? 'sandbox' : 'production'));
     }
 
     protected function request()
     {
         return Http::withHeaders([
-            'Authorization' => 'Bearer '.config('cashier-polar.key'),
+            'Authorization' => 'Bearer ' . config('cashier-polar.key'),
             'Content-Type' => 'application/json',
         ])->baseUrl($this->baseUrl());
     }
@@ -31,10 +31,28 @@ class CashierPolar
         return $response->json();
     }
 
+    public function resumeSubscription(string $subscription_id)
+    {
+        return $this->request()
+            ->patch("subscriptions/{$subscription_id}", [
+                "cancel_at_period_end" => false,
+            ])
+            ->json();
+    }
+
     public function cancelSubscription(string $subscription_id)
     {
         return $this->request()
-            ->delete("customer-portal/subscriptions/{$subscription_id}")
+            ->patch("subscriptions/{$subscription_id}", [
+                "cancel_at_period_end" => true,
+            ])
+            ->json();
+    }
+
+    public function revokeSubscription(string $subscription_id)
+    {
+        return $this->request()
+            ->delete("subscriptions/{$subscription_id}")
             ->json();
     }
 
@@ -67,7 +85,7 @@ class CashierPolar
     public function updateSubscription(string $subscription_id, string $price_id)
     {
         return $this->request()
-            ->patch("customer-portal/subscriptions/{$subscription_id}", [
+            ->patch("subscriptions/{$subscription_id}", [
                 'product_price_id' => $price_id,
             ])
             ->json();

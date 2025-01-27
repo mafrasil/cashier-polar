@@ -105,6 +105,10 @@ trait Billable
 
     public function polarId(): ?string
     {
+        if (!$this->relationLoaded('customer')) {
+            $this->load('customer');
+        }
+
         return $this->customer?->polar_id;
     }
 
@@ -119,7 +123,7 @@ trait Billable
     {
         $subscription = $this->subscription($type);
 
-        if (! $subscription || ! $subscription->active()) {
+        if (!$subscription || !$subscription->active()) {
             return false;
         }
 
@@ -178,12 +182,14 @@ trait Billable
 
     public function orders(array $filters = [])
     {
-        if (! $this->polarId()) {
-            return []; // Return empty array if no Polar customer ID exists
+        $polarId = $this->polarId();
+
+        if (!$polarId) {
+            return [];
         }
 
         return app(CashierPolar::class)->getOrders(array_merge([
-            'customer_id' => $this->polarId(),
+            'customer_id' => $polarId,
         ], $filters));
     }
 

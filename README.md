@@ -107,7 +107,7 @@ echo $subscription->interval;        // Get billing interval (e.g., "month")
 echo $subscription->description;     // Get subscription description
 
 // Check subscription status
-if ($subscription->active()) {
+if ($subscription->active()) { // or $user->subscribed()
     // Subscription is usable if any of:
     // - Status is active
     // - Currently on grace period after cancellation
@@ -128,6 +128,10 @@ if ($subscription->withinPeriod()) {}
 
 ```php
 $subscription->cancel();                    // Cancel subscription (End of period)
+$subscription->resume();                    // Resume subscription if cancelled
+
+$subscription->revoke();                    // Revoke subscription (cancel immediately)
+
 $subscription->change('new_price_id');      // Change subscription plan
 $subscription->onGracePeriod();             // Check if scheduled for cancellation
 $subscription->cancelled();                 // Check if cancelled

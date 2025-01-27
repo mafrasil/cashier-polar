@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Support\Facades\Log;
 use Mafrasil\CashierPolar\CashierPolar;
 use Mafrasil\CashierPolar\Enums\SubscriptionStatus;
 
@@ -55,7 +54,8 @@ class PolarSubscription extends Model
 
     public function active(): bool
     {
-        return $this->status === SubscriptionStatus::ACTIVE || $this->onTrial() || $this->onGracePeriod();
+        return ($this->status !== SubscriptionStatus::CANCELED) ||
+            ($this->status === SubscriptionStatus::CANCELED && ($this->onTrial() || $this->onGracePeriod()));
     }
 
     public function cancelled(): bool
@@ -97,50 +97,59 @@ class PolarSubscription extends Model
         $this->current_period_end->isPast();
     }
 
+    public function revoke(): self
+    {
+        app(CashierPolar::class)->revokeSubscription($this->polar_id);
+        return $this;
+    }
+
+    public function resume(): self
+    {
+        app(CashierPolar::class)->resumeSubscription($this->polar_id);
+        return $this;
+    }
+
     public function cancel(): self
     {
         if ($this->cancelled() || $this->cancel_at_period_end) {
             throw new \Exception('Subscription is already cancelled or scheduled for cancellation.');
         }
 
-        Log::info('Cancelling subscription', ['polar_id' => $this->polar_id]);
-        $result = app(CashierPolar::class)->cancelSubscription($this->polar_id);
-        Log::info('Subscription cancelled', ['result' => $result]);
-
+        app(CashierPolar::class)->cancelSubscription($this->polar_id);
         return $this;
     }
 
     public function getNameAttribute(): ?string
     {
-        if (! $this->items) {
+        if (!$this->items) {
             return null;
         }
 
         $item = $this->items->first();
-        if (! $item) {
+        if (!$item) {
             return null;
         }
 
-        return $item->product_name ?? 'Product '.$item->product_id;
+        return $item->product_name ?? 'Product ' . $item->product_id;
     }
 
     public function getPriceAttribute(): ?string
     {
-        if (! $this->items) {
+        if (!$this->items) {
             return null;
         }
 
         $item = $this->items->first();
-        if (! $item || ! $item->price_amount || ! $item->price_currency) {
+        if (!$item || !$item->price_amount || !$item->price_currency) {
             return null;
         }
 
-        return number_format($item->price_amount / 100, 2).' '.strtoupper($item->price_currency);
+        return number_format($item->price_amount / 100, 2) . ' ' . strtoupper($item->price_currency);
     }
 
     public function getIntervalAttribute(): ?string
     {
-        if (! $this->items) {
+        if (!$this->items) {
             return null;
         }
 
@@ -149,7 +158,7 @@ class PolarSubscription extends Model
 
     public function getDescriptionAttribute(): ?string
     {
-        if (! $this->items) {
+        if (!$this->items) {
             return null;
         }
 
@@ -183,7 +192,7 @@ class PolarSubscription extends Model
 
     public function getProductIdAttribute(): ?string
     {
-        if (! $this->items) {
+        if (!$this->items) {
             return null;
         }
 
@@ -192,7 +201,7 @@ class PolarSubscription extends Model
 
     public function getPriceIdAttribute(): ?string
     {
-        if (! $this->items) {
+        if (!$this->items) {
             return null;
         }
 
@@ -216,11 +225,11 @@ class PolarSubscription extends Model
 
     public function currentPeriod(): ?string
     {
-        if (! $this->current_period_start || ! $this->current_period_end) {
+        if (!$this->current_period_start || !$this->current_period_end) {
             return null;
         }
 
-        return $this->current_period_start->format('Y-m-d').' to '.$this->current_period_end->format('Y-m-d');
+        return $this->current_period_start->format('Y-m-d') . ' to ' . $this->current_period_end->format('Y-m-d');
     }
 
     public function withinPeriod(): bool

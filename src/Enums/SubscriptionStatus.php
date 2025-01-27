@@ -2,8 +2,7 @@
 
 namespace Mafrasil\CashierPolar\Enums;
 
-enum SubscriptionStatus: string
-{
+enum SubscriptionStatus: string {
     case INCOMPLETE = 'incomplete';
     case INCOMPLETE_EXPIRED = 'incomplete_expired';
     case TRIALING = 'trialing';
@@ -11,6 +10,7 @@ enum SubscriptionStatus: string
     case PAST_DUE = 'past_due';
     case CANCELED = 'canceled';
     case UNPAID = 'unpaid';
+    case REVOKED = 'revoked';
 
     public function isValid(): bool
     {
