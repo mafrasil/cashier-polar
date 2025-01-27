@@ -8,14 +8,14 @@ class CashierPolar
 {
     protected function baseUrl()
     {
-        return config('cashier-polar.urls.' .
+        return config('cashier-polar.urls.'.
             (config('cashier-polar.sandbox') ? 'sandbox' : 'production'));
     }
 
     protected function request()
     {
         return Http::withHeaders([
-            'Authorization' => 'Bearer ' . config('cashier-polar.key'),
+            'Authorization' => 'Bearer '.config('cashier-polar.key'),
             'Content-Type' => 'application/json',
         ])->baseUrl($this->baseUrl());
     }
@@ -35,7 +35,7 @@ class CashierPolar
     {
         return $this->request()
             ->patch("subscriptions/{$subscription_id}", [
-                "cancel_at_period_end" => false,
+                'cancel_at_period_end' => false,
             ])
             ->json();
     }
@@ -44,7 +44,7 @@ class CashierPolar
     {
         return $this->request()
             ->patch("subscriptions/{$subscription_id}", [
-                "cancel_at_period_end" => true,
+                'cancel_at_period_end' => true,
             ])
             ->json();
     }
