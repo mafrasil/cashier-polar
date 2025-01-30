@@ -97,26 +97,23 @@ class PolarSubscription extends Model
         $this->current_period_end->isPast();
     }
 
-    public function revoke(): self
+    public function revoke(): array
     {
-        app(CashierPolar::class)->revokeSubscription($this->polar_id);
-        return $this;
+        return app(CashierPolar::class)->revokeSubscription($this->polar_id);
     }
 
-    public function resume(): self
+    public function resume(): array
     {
-        app(CashierPolar::class)->resumeSubscription($this->polar_id);
-        return $this;
+        return app(CashierPolar::class)->resumeSubscription($this->polar_id);
     }
 
-    public function cancel(): self
+    public function cancel(): array
     {
         if ($this->cancelled() || $this->cancel_at_period_end) {
             throw new \Exception('Subscription is already cancelled or scheduled for cancellation.');
         }
 
-        app(CashierPolar::class)->cancelSubscription($this->polar_id);
-        return $this;
+        return app(CashierPolar::class)->cancelSubscription($this->polar_id);
     }
 
     public function getNameAttribute(): ?string
@@ -239,11 +236,9 @@ class PolarSubscription extends Model
         now()->between($this->current_period_start, $this->current_period_end);
     }
 
-    public function change(string $priceId): self
+    public function change(string $priceId): array
     {
-        app(CashierPolar::class)->updateSubscription($this->polar_id, $priceId);
-
-        return $this;
+        return app(CashierPolar::class)->updateSubscription($this->polar_id, $priceId);
     }
 
     public function getActiveAttribute(): bool
