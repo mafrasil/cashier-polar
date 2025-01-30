@@ -2,6 +2,11 @@
 
 All notable changes to `cashier-polar` will be documented in this file.
 
+## v0.3.0 - 2025-01-27
+
+- Webhook improvements
+- Cancel / Resume / Revoke subscription
+
 ## v0.2.4 - 2024-12-27
 
 - fix billable and canceled status

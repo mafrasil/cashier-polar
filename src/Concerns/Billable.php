@@ -105,7 +105,7 @@ trait Billable
 
     public function polarId(): ?string
     {
-        if (!$this->relationLoaded('customer')) {
+        if (! $this->relationLoaded('customer')) {
             $this->load('customer');
         }
 
@@ -123,7 +123,7 @@ trait Billable
     {
         $subscription = $this->subscription($type);
 
-        if (!$subscription || !$subscription->active()) {
+        if (! $subscription || ! $subscription->active()) {
             return false;
         }
 
@@ -184,7 +184,7 @@ trait Billable
     {
         $polarId = $this->polarId();
 
-        if (!$polarId) {
+        if (! $polarId) {
             return [];
         }
 
