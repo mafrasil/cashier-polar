@@ -2,6 +2,10 @@
 
 All notable changes to `cashier-polar` will be documented in this file.
 
+## v0.3.1 - 2025-01-30
+
+- return api responses from change, resume, cancel
+
 ## v0.3.0 - 2025-01-27
 
 - Webhook improvements
