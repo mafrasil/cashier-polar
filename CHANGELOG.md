@@ -2,6 +2,10 @@
 
 All notable changes to `cashier-polar` will be documented in this file.
 
+## v0.3.5 - 2025-03-13
+
+Laravel 12
+
 ## v0.3.4 - 2025-01-30
 
 add subscription status checks and refine active method
