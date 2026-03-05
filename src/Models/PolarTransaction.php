@@ -16,6 +16,7 @@ class PolarTransaction extends Model
         'total' => 'decimal:2',
         'tax' => 'decimal:2',
         'billed_at' => 'datetime',
+        'metadata' => 'array',
     ];
 
     public function billable(): MorphTo
