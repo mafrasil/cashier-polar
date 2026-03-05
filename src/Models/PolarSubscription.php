@@ -92,7 +92,7 @@ class PolarSubscription extends Model
         return $this->cancel_at_period_end &&
         $this->current_period_end &&
         $this->current_period_end->isFuture() &&
-        !$this->ended();
+        ! $this->ended();
     }
 
     public function recurring(): bool
