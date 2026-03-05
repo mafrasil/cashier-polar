@@ -23,6 +23,7 @@ Cashier Polar provides an expressive, fluent interface to [Polar's](https://pola
     -   [Create a Checkout Session](#create-a-checkout-session)
     -   [Access Subscriptions](#access-subscriptions)
     -   [Manage Subscriptions](#manage-subscriptions)
+    -   [Trials](#trials)
     -   [Products and Pricing](#products-and-pricing)
     -   [Orders and Invoices](#orders-and-invoices)
     -   [Webhook Events](#webhook-events)
@@ -79,7 +80,7 @@ class User extends Authenticatable
 ### Create a Checkout Session
 
 ```php
-// Simple checkout
+// Simple checkout with a product ID
 $checkout = $user->checkout('product_id');
 
 // With options
@@ -100,41 +101,56 @@ return redirect($checkout['url']);
 // Get subscription details
 $subscription = $user->subscription;
 
-echo $subscription->name;            // Get subscription name
-echo $subscription->price;           // Get formatted price (e.g., "10.00 USD")
-echo $subscription->interval;        // Get billing interval (e.g., "month")
-echo $subscription->description;     // Get subscription description
+echo $subscription->name;            // Product name (e.g., "Pro")
+echo $subscription->price;           // Formatted price (e.g., "15.00 USD")
+echo $subscription->interval;        // Billing interval (e.g., "month")
+echo $subscription->description;     // Product description
+echo $subscription->product_id;      // Polar product ID
 
 // Check subscription status
 if ($subscription->active()) { // or $user->subscribed()
     // Subscription is usable if any of:
-    // - Status is active
-    // - Currently on grace period after cancellation
+    // - Status is active or trialing
+    // - Cancelled but on trial or grace period
 }
 
 // Subscription has been cancelled and on grace period (within billing period)
 if ($subscription->onGracePeriod()) {}
 
-// Subscription has been cancelled and grace period has ended (outside billing period)
+// Subscription has been cancelled and grace period has ended
 if ($subscription->cancelled()) {}
+
+// Subscription has ended
+if ($subscription->ended()) {}
 
 // Period information
 echo $subscription->currentPeriod();  // "2024-01-01 to 2024-02-01"
 if ($subscription->withinPeriod()) {}
+
+// Check specific product
+if ($subscription->hasProduct('product_id')) {}
+
+// Check specific price plan
+if ($subscription->hasPlan('price_id')) {}
+
+// Payment issues
+if ($subscription->hasPaymentIssue()) {}
 ```
 
 ### Manage Subscriptions
 
 ```php
-$subscription->cancel();                    // Cancel subscription (End of period)
-$subscription->resume();                    // Resume subscription if cancelled
+// Cancel at end of billing period
+$subscription->cancel();
 
-$subscription->revoke();                    // Revoke subscription (cancel immediately)
+// Resume a cancelled subscription (before period ends)
+$subscription->resume();
 
-$subscription->change('new_product_id');     // Change subscription product
-$subscription->onGracePeriod();             // Check if scheduled for cancellation
-$subscription->cancelled();                 // Check if cancelled
-$subscription->active();                    // Check if subscription is active
+// Revoke immediately (cancel right now)
+$subscription->revoke();
+
+// Change to a different product
+$subscription->change('new_product_id');
 
 // Example usage
 if ($subscription->onGracePeriod()) {
@@ -145,6 +161,37 @@ if ($subscription->onGracePeriod()) {
     echo "Active " . $subscription->interval . " subscription";
 }
 ```
+
+### Trials
+
+Trials are configured on your products in the Polar dashboard. When a customer subscribes to a product with a trial, the subscription will have `trialing` status.
+
+```php
+// Check if subscription is on trial
+if ($subscription->onTrial()) {
+    echo "Trial ends on " . $subscription->trialEndDate(); // "2024-01-15"
+    echo "Days left: " . $subscription->days_until_trial_ends;
+}
+
+// Check if trial has expired
+if ($subscription->hasExpiredTrial()) {}
+
+// End trial early and start paying immediately
+$subscription->endTrial();
+
+// Cancel during trial (won't convert to paid when trial ends)
+$subscription->cancel();
+
+// Revoke during trial (ends immediately)
+$subscription->revoke();
+
+// Trial dates
+$subscription->trialStart();    // Carbon instance
+$subscription->trialEnd();      // Carbon instance
+$subscription->trialEndDate();  // "2024-01-15"
+```
+
+The `active()` method returns `true` for trialing subscriptions, so `$user->subscribed()` works seamlessly whether the user is on a trial or a paid plan.
 
 ### Products and Pricing
 
@@ -206,7 +253,7 @@ Make sure to configure your webhook URL in your Polar dashboard to match your ap
 -   URL: `https://your-domain.com/webhooks/polar` (or your custom path)
 -   Secret: Use the value from your `POLAR_WEBHOOK_SECRET` environment variable
 
-The package automatically validates webhook signatures to ensure they come from Polar and logs all incoming webhook data for debugging purposes.
+The package automatically validates webhook signatures to ensure they come from Polar.
 
 #### Local Testing with Ngrok
 
@@ -216,12 +263,11 @@ For local development, you can use [Ngrok](https://ngrok.com) to create a secure
 ngrok http 8000
 ```
 
-Then use the generated Ngrok URL (e.g., `https://random-string.ngrok.io/webhooks/polar`) as your webhook endpoint in the Polar dashboard. This allows you to receive and test webhooks during local development.
+Then use the generated Ngrok URL (e.g., `https://random-string.ngrok.io/webhooks/polar`) as your webhook endpoint in the Polar dashboard.
 
 ### Listen for Events
 
 ```php
-// EventServiceProvider.php
 use Mafrasil\CashierPolar\Events\SubscriptionCreated;
 use Mafrasil\CashierPolar\Events\SubscriptionCanceled;
 use Mafrasil\CashierPolar\Events\OrderCreated;

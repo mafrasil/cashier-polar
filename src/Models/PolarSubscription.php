@@ -114,6 +114,15 @@ class PolarSubscription extends Model
         return app(CashierPolar::class)->resumeSubscription($this->polar_id);
     }
 
+    public function endTrial(): array
+    {
+        if (! $this->onTrial()) {
+            throw new \Exception('Subscription is not currently on trial.');
+        }
+
+        return app(CashierPolar::class)->endTrial($this->polar_id);
+    }
+
     public function cancel(): array
     {
         if ($this->cancelled() || $this->cancel_at_period_end) {

@@ -2,6 +2,7 @@
 
 namespace Mafrasil\CashierPolar\WebhookHandler;
 
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -193,7 +194,7 @@ class ProcessPolarWebhook implements ShouldQueue
             'total' => $data['amount'] ?? 0,
             'tax' => $data['tax_amount'] ?? 0,
             'currency' => $data['currency'] ?? 'usd',
-            'billed_at' => now()->parse($data['created_at']),
+            'billed_at' => Carbon::parse($data['created_at']),
             'metadata' => [
                 'billing_reason' => $data['billing_reason'] ?? null,
                 'billing_address' => $data['billing_address'] ?? null,
@@ -296,12 +297,12 @@ class ProcessPolarWebhook implements ShouldQueue
 
         $subscription->update([
             'status' => SubscriptionStatus::CANCELED->value,
-            'canceled_at' => isset($data['canceled_at']) ? now()->parse($data['canceled_at']) : now(),
+            'canceled_at' => isset($data['canceled_at']) ? Carbon::parse($data['canceled_at']) : now(),
             'cancel_at_period_end' => $data['cancel_at_period_end'] ?? true,
             'ends_at' => isset($data['ends_at'])
-                ? now()->parse($data['ends_at'])
+                ? Carbon::parse($data['ends_at'])
                 : (isset($data['current_period_end'])
-                    ? now()->parse($data['current_period_end'])
+                    ? Carbon::parse($data['current_period_end'])
                     : now()),
             'customer_cancellation_reason' => $data['customer_cancellation_reason'] ?? null,
             'customer_cancellation_comment' => $data['customer_cancellation_comment'] ?? null,
@@ -336,7 +337,7 @@ class ProcessPolarWebhook implements ShouldQueue
 
         $subscription->update([
             'status' => SubscriptionStatus::CANCELED->value,
-            'ended_at' => isset($data['ended_at']) ? now()->parse($data['ended_at']) : now(),
+            'ended_at' => isset($data['ended_at']) ? Carbon::parse($data['ended_at']) : now(),
             'ends_at' => now(),
         ]);
 
@@ -386,14 +387,14 @@ class ProcessPolarWebhook implements ShouldQueue
     {
         return [
             'status' => $data['status'] ?? 'incomplete',
-            'trial_start' => isset($data['trial_start']) ? now()->parse($data['trial_start']) : null,
-            'trial_end' => isset($data['trial_end']) ? now()->parse($data['trial_end']) : null,
-            'ends_at' => isset($data['ends_at']) ? now()->parse($data['ends_at']) : null,
-            'ended_at' => isset($data['ended_at']) ? now()->parse($data['ended_at']) : null,
-            'canceled_at' => isset($data['canceled_at']) ? now()->parse($data['canceled_at']) : null,
-            'current_period_start' => isset($data['current_period_start']) ? now()->parse($data['current_period_start']) : null,
-            'current_period_end' => isset($data['current_period_end']) ? now()->parse($data['current_period_end']) : null,
-            'started_at' => isset($data['started_at']) ? now()->parse($data['started_at']) : null,
+            'trial_start' => isset($data['trial_start']) ? Carbon::parse($data['trial_start']) : null,
+            'trial_end' => isset($data['trial_end']) ? Carbon::parse($data['trial_end']) : null,
+            'ends_at' => isset($data['ends_at']) ? Carbon::parse($data['ends_at']) : null,
+            'ended_at' => isset($data['ended_at']) ? Carbon::parse($data['ended_at']) : null,
+            'canceled_at' => isset($data['canceled_at']) ? Carbon::parse($data['canceled_at']) : null,
+            'current_period_start' => isset($data['current_period_start']) ? Carbon::parse($data['current_period_start']) : null,
+            'current_period_end' => isset($data['current_period_end']) ? Carbon::parse($data['current_period_end']) : null,
+            'started_at' => isset($data['started_at']) ? Carbon::parse($data['started_at']) : null,
             'cancel_at_period_end' => $data['cancel_at_period_end'] ?? false,
             'product_id' => $data['product_id'] ?? null,
             'discount_id' => $data['discount_id'] ?? null,

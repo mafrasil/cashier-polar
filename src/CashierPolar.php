@@ -49,10 +49,29 @@ class CashierPolar
             ->json();
     }
 
-    public function revokeSubscription(string $subscription_id)
+    public function revokeSubscription(string $subscription_id, ?string $reason = null, ?string $comment = null)
+    {
+        $payload = ['revoke' => true];
+
+        if ($reason) {
+            $payload['customer_cancellation_reason'] = $reason;
+        }
+
+        if ($comment) {
+            $payload['customer_cancellation_comment'] = $comment;
+        }
+
+        return $this->request()
+            ->patch("subscriptions/{$subscription_id}", $payload)
+            ->json();
+    }
+
+    public function endTrial(string $subscription_id)
     {
         return $this->request()
-            ->delete("subscriptions/{$subscription_id}")
+            ->patch("subscriptions/{$subscription_id}", [
+                'trial_end' => 'now',
+            ])
             ->json();
     }
 
