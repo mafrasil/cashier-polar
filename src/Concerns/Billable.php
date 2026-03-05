@@ -199,9 +199,45 @@ trait Billable
         ], $filters));
     }
 
+    public function invoices(array $filters = [])
+    {
+        $polarId = $this->polarId();
+
+        if (! $polarId) {
+            return [];
+        }
+
+        $cashier = app(CashierPolar::class);
+        $session = $cashier->createCustomerSession($polarId);
+
+        $response = $cashier->getCustomerPortalOrders($session['token'], $filters);
+
+        if (isset($response['items'])) {
+            $response['items'] = array_values(array_filter(
+                $response['items'],
+                fn ($order) => ($order['paid'] ?? false) === true
+            ));
+        }
+
+        return $response;
+    }
+
+    public function generateInvoice(string $orderId)
+    {
+        $cashier = app(CashierPolar::class);
+        $session = $cashier->createCustomerSession($this->polarId());
+
+        $cashier->generateOrderInvoice($orderId, $session['token']);
+
+        return true;
+    }
+
     public function getInvoice(string $orderId)
     {
-        $response = app(CashierPolar::class)->getOrderInvoice($orderId);
+        $cashier = app(CashierPolar::class);
+        $session = $cashier->createCustomerSession($this->polarId());
+
+        $response = $cashier->getOrderInvoice($orderId, $session['token']);
 
         return $response['url'] ?? null;
     }

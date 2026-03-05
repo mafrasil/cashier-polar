@@ -213,19 +213,44 @@ $products = CashierPolar::products([
 
 ### Orders and Invoices
 
-```php
-// Get all orders for a user
-$orders = $user->orders();
+In Polar, orders represent payments/invoices. Each time a customer pays (initial purchase, subscription renewal, plan change), an order is created.
 
-// Get orders with filters
-$orders = $user->orders([
-    'status' => 'completed',
-    // other filters...
+```php
+// Get paid invoices via the customer portal API
+// Returns only paid orders with rich data: product, subscription,
+// line items, invoice_number, is_invoice_generated, billing_reason, etc.
+$invoices = $user->invoices();
+
+// Filter invoices
+$invoices = $user->invoices([
+    'product_id' => 'product_id',
+    'product_billing_type' => 'recurring', // or 'one_time'
+    'subscription_id' => 'subscription_id',
+    'query' => 'Pro Plan',
+    'page' => 1,
+    'limit' => 10,
+    'sorting' => ['-created_at'],
 ]);
 
-// Get invoice URL for specific order
+// Get all orders via the server-side API (includes all statuses)
+$orders = $user->orders();
+
+// Generate an invoice PDF for an order (must be called before retrieving)
+// This triggers Polar to create the invoice PDF — returns 202 (accepted)
+$user->generateInvoice('order_id');
+
+// Get invoice PDF URL for a specific order
+// The invoice must be generated first, otherwise this returns null
 $invoiceUrl = $user->getInvoice('order_id');
+
+// Access local transaction records (stored via webhooks)
+$transactions = $user->transactions()->get();
+
+// Only completed/paid local transactions
+$transactions = $user->transactions()->paid()->get();
 ```
+
+> **Important**: Polar requires invoices to be generated before they can be retrieved. Call `generateInvoice()` first, wait a few seconds, then call `getInvoice()`. For a reliable approach, listen to the `order.updated` webhook and check the `is_invoice_generated` field before retrieving.
 
 ### Webhook Events
 

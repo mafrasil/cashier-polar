@@ -2,6 +2,7 @@
 
 namespace Mafrasil\CashierPolar\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -22,5 +23,10 @@ class PolarTransaction extends Model
     public function billable(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    public function scopePaid(Builder $query): Builder
+    {
+        return $query->where('status', 'completed');
     }
 }

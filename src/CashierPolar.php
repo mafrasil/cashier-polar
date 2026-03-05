@@ -128,10 +128,40 @@ class CashierPolar
             ->json();
     }
 
-    public function getOrderInvoice(string $orderId)
+    public function createCustomerSession(string $customerId)
     {
         return $this->request()
+            ->post('customer-sessions/', [
+                'customer_id' => $customerId,
+            ])
+            ->json();
+    }
+
+    protected function customerPortalRequest(string $sessionToken)
+    {
+        return Http::withHeaders([
+            'Authorization' => 'Bearer '.$sessionToken,
+            'Content-Type' => 'application/json',
+        ])->baseUrl($this->baseUrl());
+    }
+
+    public function generateOrderInvoice(string $orderId, string $sessionToken)
+    {
+        return $this->customerPortalRequest($sessionToken)
+            ->post("customer-portal/orders/{$orderId}/invoice");
+    }
+
+    public function getOrderInvoice(string $orderId, string $sessionToken)
+    {
+        return $this->customerPortalRequest($sessionToken)
             ->get("customer-portal/orders/{$orderId}/invoice")
+            ->json();
+    }
+
+    public function getCustomerPortalOrders(string $sessionToken, array $filters = [])
+    {
+        return $this->customerPortalRequest($sessionToken)
+            ->get('customer-portal/orders/', $filters)
             ->json();
     }
 
