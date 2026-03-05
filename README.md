@@ -80,12 +80,11 @@ class User extends Authenticatable
 
 ```php
 // Simple checkout
-$checkout = $user->checkout('price_id');
+$checkout = $user->checkout('product_id');
 
 // With options
-$checkout = $user->checkout('price_id', [
+$checkout = $user->checkout('product_id', [
     'success_url' => route('checkout.success'),
-    'cancel_url' => route('checkout.cancel'),
     'metadata' => [
         'custom_field' => 'value'
     ]
@@ -132,7 +131,7 @@ $subscription->resume();                    // Resume subscription if cancelled
 
 $subscription->revoke();                    // Revoke subscription (cancel immediately)
 
-$subscription->change('new_price_id');      // Change subscription plan
+$subscription->change('new_product_id');     // Change subscription product
 $subscription->onGracePeriod();             // Check if scheduled for cancellation
 $subscription->cancelled();                 // Check if cancelled
 $subscription->active();                    // Check if subscription is active

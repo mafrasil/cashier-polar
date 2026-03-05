@@ -11,7 +11,6 @@ enum SubscriptionStatus: string
     case PAST_DUE = 'past_due';
     case CANCELED = 'canceled';
     case UNPAID = 'unpaid';
-    case REVOKED = 'revoked';
 
     public function isValid(): bool
     {

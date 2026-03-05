@@ -20,13 +20,13 @@ class CashierPolar
         ])->baseUrl($this->baseUrl());
     }
 
-    public function createCheckout(string $priceId, array $options = [])
+    public function createCheckout(string $productId, array $options = [])
     {
-        $response = $this->request()->post('checkouts/custom/', array_merge([
-            'organization_id' => config('cashier-polar.organization_id'),
-            'product_price_id' => $priceId,
-            'payment_processor' => 'stripe',
-        ], $options));
+        $payload = array_merge([
+            'products' => [$productId],
+        ], $options);
+
+        $response = $this->request()->post('checkouts/', $payload);
 
         return $response->json();
     }
@@ -59,7 +59,7 @@ class CashierPolar
     public function getCheckout(string $checkoutId)
     {
         return $this->request()
-            ->get("checkouts/custom/{$checkoutId}")
+            ->get("checkouts/{$checkoutId}")
             ->json();
     }
 
@@ -82,12 +82,16 @@ class CashierPolar
             ->json();
     }
 
-    public function updateSubscription(string $subscription_id, string $price_id)
+    public function updateSubscription(string $subscription_id, string $productId, ?string $priceId = null)
     {
+        $payload = ['product_id' => $productId];
+
+        if ($priceId) {
+            $payload['price_id'] = $priceId;
+        }
+
         return $this->request()
-            ->patch("subscriptions/{$subscription_id}", [
-                'product_price_id' => $price_id,
-            ])
+            ->patch("subscriptions/{$subscription_id}", $payload)
             ->json();
     }
 
@@ -109,6 +113,13 @@ class CashierPolar
     {
         return $this->request()
             ->get("customer-portal/orders/{$orderId}/invoice")
+            ->json();
+    }
+
+    public function getSubscription(string $subscriptionId)
+    {
+        return $this->request()
+            ->get("subscriptions/{$subscriptionId}")
             ->json();
     }
 }

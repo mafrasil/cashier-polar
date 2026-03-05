@@ -72,11 +72,10 @@ trait Billable
         return $this->transactions()->get();
     }
 
-    public function checkout(string $priceId, array $options = [])
+    public function checkout(string $productId, array $options = [])
     {
         $defaultOptions = [
             'success_url' => url(config('cashier-polar.success_url', '/dashboard')),
-            'payment_processor' => 'stripe',
             'customer_name' => $this->name ?? null,
             'customer_email' => $this->email ?? null,
             'metadata' => [
@@ -98,7 +97,7 @@ trait Billable
         }
 
         return app(CashierPolar::class)->createCheckout(
-            $priceId,
+            $productId,
             array_merge($defaultOptions, $options)
         );
     }

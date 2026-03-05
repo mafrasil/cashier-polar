@@ -15,13 +15,13 @@ beforeEach(function () {
 
 it('can create a checkout session', function () {
     Http::fake([
-        '*checkouts/custom*' => Http::response([
+        '*checkouts/*' => Http::response([
             'id' => 'checkout_123',
             'url' => 'https://checkout.polar.sh/123',
         ], 200),
     ]);
 
-    $checkout = $this->user->checkout('price_123');
+    $checkout = $this->user->checkout('product_123');
 
     expect($checkout)
         ->toHaveKey('id', 'checkout_123')
@@ -30,7 +30,7 @@ it('can create a checkout session', function () {
 
 it('can retrieve a checkout session', function () {
     Http::fake([
-        '*checkouts/custom/checkout_123*' => Http::response([
+        '*checkouts/checkout_123*' => Http::response([
             'id' => 'checkout_123',
             'status' => 'completed',
         ], 200),

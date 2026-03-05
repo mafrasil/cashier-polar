@@ -20,10 +20,10 @@ class PolarSubscription extends Model
         'name',
         'price',
         'price_id',
-        'product_id',
         'active',
         'cancelled',
         'on_grace_period',
+        'on_trial',
         'interval',
         'description',
         'days_until_ends',
@@ -33,12 +33,16 @@ class PolarSubscription extends Model
     protected $with = ['items'];
 
     protected $casts = [
-        'trial_ends_at' => 'datetime',
+        'trial_start' => 'datetime',
+        'trial_end' => 'datetime',
         'ends_at' => 'datetime',
+        'ended_at' => 'datetime',
+        'canceled_at' => 'datetime',
         'current_period_start' => 'datetime',
         'current_period_end' => 'datetime',
         'cancel_at_period_end' => 'boolean',
         'metadata' => 'array',
+        'custom_field_data' => 'array',
         'status' => SubscriptionStatus::class,
     ];
 
@@ -65,17 +69,22 @@ class PolarSubscription extends Model
 
     public function onTrial(): bool
     {
-        return $this->trial_ends_at && $this->trial_ends_at->isFuture();
+        return $this->trial_end && $this->trial_end->isFuture();
     }
 
     public function hasExpiredTrial(): bool
     {
-        return $this->trial_ends_at && $this->trial_ends_at->isPast();
+        return $this->trial_end && $this->trial_end->isPast();
     }
 
     public function hasPlan(string $plan): bool
     {
         return $this->items()->where('price_id', $plan)->exists();
+    }
+
+    public function hasProduct(string $productId): bool
+    {
+        return $this->product_id === $productId;
     }
 
     public function onGracePeriod(): bool
@@ -87,14 +96,12 @@ class PolarSubscription extends Model
 
     public function recurring(): bool
     {
-        return $this->items->first()?->is_recurring ?? false;
+        return $this->recurring_interval !== null;
     }
 
     public function ended(): bool
     {
-        return $this->cancelled() &&
-        $this->current_period_end &&
-        $this->current_period_end->isPast();
+        return $this->ended_at && $this->ended_at->isPast();
     }
 
     public function revoke(): array
@@ -132,6 +139,10 @@ class PolarSubscription extends Model
 
     public function getPriceAttribute(): ?string
     {
+        if ($this->amount !== null && $this->currency !== null) {
+            return number_format($this->amount / 100, 2).' '.strtoupper($this->currency);
+        }
+
         if (! $this->items) {
             return null;
         }
@@ -146,11 +157,7 @@ class PolarSubscription extends Model
 
     public function getIntervalAttribute(): ?string
     {
-        if (! $this->items) {
-            return null;
-        }
-
-        return $this->items->first()?->recurring_interval;
+        return $this->recurring_interval;
     }
 
     public function getDescriptionAttribute(): ?string
@@ -172,9 +179,14 @@ class PolarSubscription extends Model
         return $this->ends_at && $this->ends_at->isPast();
     }
 
-    public function trialEndsAt(): ?Carbon
+    public function trialStart(): ?Carbon
     {
-        return $this->trial_ends_at;
+        return $this->trial_start;
+    }
+
+    public function trialEnd(): ?Carbon
+    {
+        return $this->trial_end;
     }
 
     public function endDate(): ?string
@@ -184,16 +196,12 @@ class PolarSubscription extends Model
 
     public function trialEndDate(): ?string
     {
-        return $this->trial_ends_at?->format('Y-m-d');
+        return $this->trial_end?->format('Y-m-d');
     }
 
     public function getProductIdAttribute(): ?string
     {
-        if (! $this->items) {
-            return null;
-        }
-
-        return $this->items->first()?->product_id;
+        return $this->attributes['product_id'] ?? $this->items->first()?->product_id;
     }
 
     public function getPriceIdAttribute(): ?string
@@ -236,9 +244,9 @@ class PolarSubscription extends Model
         now()->between($this->current_period_start, $this->current_period_end);
     }
 
-    public function change(string $priceId): array
+    public function change(string $productId, ?string $priceId = null): array
     {
-        return app(CashierPolar::class)->updateSubscription($this->polar_id, $priceId);
+        return app(CashierPolar::class)->updateSubscription($this->polar_id, $productId, $priceId);
     }
 
     public function getActiveAttribute(): bool
@@ -251,6 +259,11 @@ class PolarSubscription extends Model
         return $this->cancelled();
     }
 
+    public function getOnTrialAttribute(): bool
+    {
+        return $this->onTrial();
+    }
+
     public function getDaysUntilEndsAttribute(): ?int
     {
         return $this->ends_at ? now()->diffInDays($this->ends_at) : null;
@@ -258,7 +271,7 @@ class PolarSubscription extends Model
 
     public function getDaysUntilTrialEndsAttribute(): ?int
     {
-        return $this->trial_ends_at ? now()->diffInDays($this->trial_ends_at) : null;
+        return $this->trial_end ? now()->diffInDays($this->trial_end) : null;
     }
 
     public function getOnGracePeriodAttribute(): bool
