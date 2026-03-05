@@ -128,12 +128,16 @@ class CashierPolar
             ->json();
     }
 
-    public function createCustomerSession(string $customerId)
+    public function createCustomerSession(string $customerId, ?string $returnUrl = null)
     {
+        $payload = ['customer_id' => $customerId];
+
+        if ($returnUrl) {
+            $payload['return_url'] = $returnUrl;
+        }
+
         return $this->request()
-            ->post('customer-sessions/', [
-                'customer_id' => $customerId,
-            ])
+            ->post('customer-sessions/', $payload)
             ->json();
     }
 

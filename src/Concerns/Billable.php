@@ -222,6 +222,20 @@ trait Billable
         return $response;
     }
 
+    public function customerPortalUrl(?string $returnUrl = null)
+    {
+        $polarId = $this->polarId();
+
+        if (! $polarId) {
+            return null;
+        }
+
+        $cashier = app(CashierPolar::class);
+        $session = $cashier->createCustomerSession($polarId, $returnUrl);
+
+        return $session['customer_portal_url'] ?? null;
+    }
+
     public function generateInvoice(string $orderId)
     {
         $cashier = app(CashierPolar::class);

@@ -26,6 +26,7 @@ Cashier Polar provides an expressive, fluent interface to [Polar's](https://pola
     -   [Trials](#trials)
     -   [Products and Pricing](#products-and-pricing)
     -   [Orders and Invoices](#orders-and-invoices)
+    -   [Customer Portal](#customer-portal)
     -   [Webhook Events](#webhook-events)
     -   [Listen for Events](#listen-for-events)
 -   [Testing](#testing)
@@ -251,6 +252,19 @@ $transactions = $user->transactions()->paid()->get();
 ```
 
 > **Important**: Polar requires invoices to be generated before they can be retrieved. Call `generateInvoice()` first, wait a few seconds, then call `getInvoice()`. For a reliable approach, listen to the `order.updated` webhook and check the `is_invoice_generated` field before retrieving.
+
+### Customer Portal
+
+```php
+// Get the Polar customer portal URL for the user
+$portalUrl = $user->customerPortalUrl();
+
+// With a return URL (shows a back button in the portal)
+$portalUrl = $user->customerPortalUrl(route('dashboard'));
+
+// Redirect to the portal
+return redirect($portalUrl);
+```
 
 ### Webhook Events
 
