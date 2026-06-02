@@ -2,6 +2,10 @@
 
 All notable changes to `cashier-polar` will be documented in this file.
 
+## v0.4.6 - 2026-06-02
+
+improve Polar customer session and order retrieval logic
+
 ## v0.0.4 - 2026-03-05
 
 Breaking Changes
