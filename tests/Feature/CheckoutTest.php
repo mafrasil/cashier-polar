@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Http;
+use Mafrasil\CashierPolar\Facades\CashierPolar;
 use Mafrasil\CashierPolar\Tests\Fixtures\User;
 
 beforeEach(function () {
@@ -36,7 +37,7 @@ it('can retrieve a checkout session', function () {
         ], 200),
     ]);
 
-    $checkout = \Mafrasil\CashierPolar\Facades\CashierPolar::getCheckout('checkout_123');
+    $checkout = CashierPolar::getCheckout('checkout_123');
 
     expect($checkout)
         ->toHaveKey('id', 'checkout_123')

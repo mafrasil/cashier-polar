@@ -11,6 +11,14 @@ use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Mafrasil\CashierPolar\Enums\SubscriptionStatus;
+use Mafrasil\CashierPolar\Events\CheckoutCreated;
+use Mafrasil\CashierPolar\Events\CheckoutUpdated;
+use Mafrasil\CashierPolar\Events\OrderCreated;
+use Mafrasil\CashierPolar\Events\SubscriptionActive;
+use Mafrasil\CashierPolar\Events\SubscriptionCanceled;
+use Mafrasil\CashierPolar\Events\SubscriptionCreated;
+use Mafrasil\CashierPolar\Events\SubscriptionRevoked;
+use Mafrasil\CashierPolar\Events\SubscriptionUpdated;
 use Mafrasil\CashierPolar\Models\PolarCustomer;
 
 class ProcessPolarWebhook implements ShouldQueue
@@ -111,7 +119,7 @@ class ProcessPolarWebhook implements ShouldQueue
             'billed_at' => now(),
         ]);
 
-        event(new \Mafrasil\CashierPolar\Events\CheckoutCreated($transaction, $payload));
+        event(new CheckoutCreated($transaction, $payload));
 
         return true;
     }
@@ -142,7 +150,7 @@ class ProcessPolarWebhook implements ShouldQueue
             'status' => $data['status'] ?? 'unknown',
         ]);
 
-        event(new \Mafrasil\CashierPolar\Events\CheckoutUpdated($transaction, $payload));
+        event(new CheckoutUpdated($transaction, $payload));
 
         return true;
     }
@@ -201,7 +209,7 @@ class ProcessPolarWebhook implements ShouldQueue
             ],
         ]);
 
-        event(new \Mafrasil\CashierPolar\Events\OrderCreated($transaction, $payload));
+        event(new OrderCreated($transaction, $payload));
 
         return true;
     }
@@ -235,7 +243,7 @@ class ProcessPolarWebhook implements ShouldQueue
 
             $this->syncSubscriptionItems($subscription, $data);
 
-            event(new \Mafrasil\CashierPolar\Events\SubscriptionCreated($subscription, $payload));
+            event(new SubscriptionCreated($subscription, $payload));
 
             return true;
         });
@@ -267,7 +275,7 @@ class ProcessPolarWebhook implements ShouldQueue
 
             $this->syncSubscriptionItems($subscription, $data);
 
-            event(new \Mafrasil\CashierPolar\Events\SubscriptionActive($subscription, $payload));
+            event(new SubscriptionActive($subscription, $payload));
 
             return true;
         });
@@ -308,7 +316,7 @@ class ProcessPolarWebhook implements ShouldQueue
             'customer_cancellation_comment' => $data['customer_cancellation_comment'] ?? null,
         ]);
 
-        event(new \Mafrasil\CashierPolar\Events\SubscriptionCanceled($subscription, $payload));
+        event(new SubscriptionCanceled($subscription, $payload));
 
         return true;
     }
@@ -341,7 +349,7 @@ class ProcessPolarWebhook implements ShouldQueue
             'ends_at' => now(),
         ]);
 
-        event(new \Mafrasil\CashierPolar\Events\SubscriptionRevoked($subscription, $payload));
+        event(new SubscriptionRevoked($subscription, $payload));
 
         return true;
     }
@@ -371,7 +379,7 @@ class ProcessPolarWebhook implements ShouldQueue
 
         $this->syncSubscriptionItems($subscription, $data);
 
-        event(new \Mafrasil\CashierPolar\Events\SubscriptionUpdated($subscription, $payload));
+        event(new SubscriptionUpdated($subscription, $payload));
 
         return true;
     }

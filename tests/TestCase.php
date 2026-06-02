@@ -2,10 +2,15 @@
 
 namespace Mafrasil\CashierPolar\Tests;
 
+use Dotenv\Dotenv;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Http;
 use Mafrasil\CashierPolar\CashierPolarServiceProvider;
+use Mafrasil\CashierPolar\WebhookHandler\PolarSignatureValidator;
+use Mafrasil\CashierPolar\WebhookHandler\ProcessPolarWebhook;
 use Orchestra\Testbench\TestCase as Orchestra;
+use Spatie\WebhookClient\Models\WebhookCall;
+use Spatie\WebhookClient\WebhookProfile\ProcessEverythingWebhookProfile;
 
 class TestCase extends Orchestra
 {
@@ -15,9 +20,9 @@ class TestCase extends Orchestra
 
         // Load .env.testing if it exists, fallback to .env
         if (file_exists(__DIR__.'/../.env.testing')) {
-            \Dotenv\Dotenv::createImmutable(__DIR__.'/../', '.env.testing')->load();
+            Dotenv::createImmutable(__DIR__.'/../', '.env.testing')->load();
         } elseif (file_exists(__DIR__.'/../.env')) {
-            \Dotenv\Dotenv::createImmutable(__DIR__.'/../')->load();
+            Dotenv::createImmutable(__DIR__.'/../')->load();
         }
 
         Factory::guessFactoryNamesUsing(
@@ -92,10 +97,10 @@ class TestCase extends Orchestra
                 'name' => 'polar',
                 'signing_secret' => config('cashier-polar.webhook_secret'),
                 'signature_header_name' => 'webhook-signature',
-                'signature_validator' => \Mafrasil\CashierPolar\WebhookHandler\PolarSignatureValidator::class,
-                'webhook_profile' => \Spatie\WebhookClient\WebhookProfile\ProcessEverythingWebhookProfile::class,
-                'webhook_model' => \Spatie\WebhookClient\Models\WebhookCall::class,
-                'process_webhook_job' => \Mafrasil\CashierPolar\WebhookHandler\ProcessPolarWebhook::class,
+                'signature_validator' => PolarSignatureValidator::class,
+                'webhook_profile' => ProcessEverythingWebhookProfile::class,
+                'webhook_model' => WebhookCall::class,
+                'process_webhook_job' => ProcessPolarWebhook::class,
             ],
         ]);
     }
