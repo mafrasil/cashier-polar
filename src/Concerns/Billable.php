@@ -188,29 +188,35 @@ trait Billable
 
     public function orders(array $filters = [])
     {
-        $polarId = $this->polarId();
+        $polarId = $this->polarBillingCustomerId();
 
         if (! $polarId) {
             return [];
         }
 
-        return app(CashierPolar::class)->getOrders(array_merge([
+        $response = app(CashierPolar::class)->getOrders(array_merge([
             'customer_id' => $polarId,
         ], $filters));
+
+        return is_array($response) ? $response : [];
     }
 
     public function invoices(array $filters = [])
     {
-        $polarId = $this->polarId();
+        $polarId = $this->polarBillingCustomerId();
 
         if (! $polarId) {
             return [];
         }
 
         $cashier = app(CashierPolar::class);
-        $session = $cashier->createCustomerSession($polarId);
+        $response = $cashier->getOrders(array_merge([
+            'customer_id' => $polarId,
+        ], $filters));
 
-        $response = $cashier->getCustomerPortalOrders($session['token'], $filters);
+        if (! is_array($response)) {
+            return [];
+        }
 
         if (isset($response['items'])) {
             $response['items'] = array_values(array_filter(
@@ -224,14 +230,7 @@ trait Billable
 
     public function customerPortalUrl(?string $returnUrl = null)
     {
-        $polarId = $this->polarId();
-
-        if (! $polarId) {
-            return null;
-        }
-
-        $cashier = app(CashierPolar::class);
-        $session = $cashier->createCustomerSession($polarId, $returnUrl);
+        $session = $this->createPolarCustomerSession($returnUrl);
 
         return $session['customer_portal_url'] ?? null;
     }
@@ -239,7 +238,11 @@ trait Billable
     public function generateInvoice(string $orderId)
     {
         $cashier = app(CashierPolar::class);
-        $session = $cashier->createCustomerSession($this->polarId());
+        $session = $this->createPolarCustomerSession();
+
+        if (! is_array($session) || ! isset($session['token'])) {
+            return false;
+        }
 
         $cashier->generateOrderInvoice($orderId, $session['token']);
 
@@ -249,10 +252,84 @@ trait Billable
     public function getInvoice(string $orderId)
     {
         $cashier = app(CashierPolar::class);
-        $session = $cashier->createCustomerSession($this->polarId());
+        $session = $this->createPolarCustomerSession();
+
+        if (! is_array($session) || ! isset($session['token'])) {
+            return null;
+        }
 
         $response = $cashier->getOrderInvoice($orderId, $session['token']);
 
         return $response['url'] ?? null;
+    }
+
+    protected function createPolarCustomerSession(?string $returnUrl = null, string $type = 'default'): ?array
+    {
+        $polarId = $this->polarBillingCustomerId($type);
+
+        if (! $polarId) {
+            return null;
+        }
+
+        $session = app(CashierPolar::class)->createCustomerSession($polarId, $returnUrl);
+
+        return is_array($session) ? $session : null;
+    }
+
+    protected function polarBillingCustomerId(string $type = 'default'): ?string
+    {
+        $subscription = $this->subscription($type);
+
+        if ($subscription?->polar_id) {
+            try {
+                $subscriptionData = app(CashierPolar::class)->getSubscription($subscription->polar_id);
+            } catch (\Throwable) {
+                $subscriptionData = [];
+            }
+
+            $customerId = $subscriptionData['customer_id'] ?? null;
+
+            if (is_string($customerId) && $customerId !== '') {
+                $this->syncPolarCustomerId($customerId);
+
+                return $customerId;
+            }
+        }
+
+        return $this->polarId();
+    }
+
+    protected function syncPolarCustomerId(string $polarId): void
+    {
+        $customer = $this->customer;
+
+        if ($customer?->polar_id === $polarId) {
+            return;
+        }
+
+        $existingCustomer = PolarCustomer::where('polar_id', $polarId)->first();
+
+        if ($existingCustomer) {
+            if ($existingCustomer->billable_id === $this->getKey() && $existingCustomer->billable_type === get_class($this)) {
+                $this->setRelation('customer', $existingCustomer);
+            }
+
+            return;
+        }
+
+        if ($customer) {
+            $customer->update(['polar_id' => $polarId]);
+            $this->setRelation('customer', $customer->refresh());
+
+            return;
+        }
+
+        $createdCustomer = $this->customer()->create([
+            'polar_id' => $polarId,
+            'name' => $this->name ?? 'Unknown',
+            'email' => $this->email ?? 'unknown@example.com',
+        ]);
+
+        $this->setRelation('customer', $createdCustomer);
     }
 }

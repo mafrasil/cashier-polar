@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Http;
 use Mafrasil\CashierPolar\Tests\Fixtures\User;
 
 beforeEach(function () {
@@ -242,4 +243,155 @@ it('can retrieve all transactions', function () {
     expect($transactions)->toHaveCount(2)
         ->and($transactions->first()->polar_id)->toBe('ch_123')
         ->and($transactions->last()->polar_id)->toBe('ch_456');
+});
+
+it('uses the active subscription customer when listing orders', function () {
+    $this->user->createCustomer([
+        'polar_id' => 'cus_old',
+        'name' => 'Test Customer',
+        'email' => 'test@example.com',
+    ]);
+
+    $this->user->subscriptions()->create([
+        'polar_id' => 'sub_123',
+        'type' => 'default',
+        'status' => 'active',
+    ]);
+
+    Http::fake([
+        '*subscriptions/sub_123*' => Http::response([
+            'id' => 'sub_123',
+            'customer_id' => 'cus_current',
+        ], 200),
+        '*orders/*' => Http::response([
+            'items' => [
+                ['id' => 'ord_123', 'paid' => true],
+            ],
+        ], 200),
+    ]);
+
+    $orders = $this->user->orders();
+
+    expect($orders['items'])->toHaveCount(1);
+
+    Http::assertSent(function ($request) {
+        return str_contains($request->url(), '/subscriptions/sub_123');
+    });
+
+    Http::assertSent(function ($request) {
+        return str_contains($request->url(), '/orders/')
+            && $request['customer_id'] === 'cus_current';
+    });
+
+    $this->assertDatabaseHas('polar_customers', [
+        'billable_id' => $this->user->id,
+        'billable_type' => User::class,
+        'polar_id' => 'cus_current',
+    ]);
+});
+
+it('uses admin orders for invoices and filters unpaid orders', function () {
+    $this->user->createCustomer([
+        'polar_id' => 'cus_old',
+        'name' => 'Test Customer',
+        'email' => 'test@example.com',
+    ]);
+
+    $this->user->subscriptions()->create([
+        'polar_id' => 'sub_123',
+        'type' => 'default',
+        'status' => 'active',
+    ]);
+
+    Http::fake([
+        '*subscriptions/sub_123*' => Http::response([
+            'id' => 'sub_123',
+            'customer_id' => 'cus_current',
+        ], 200),
+        '*orders/*' => Http::response([
+            'items' => [
+                ['id' => 'ord_paid', 'paid' => true],
+                ['id' => 'ord_unpaid', 'paid' => false],
+            ],
+        ], 200),
+        '*customer-sessions/*' => Http::response([
+            'error' => 'Customer does not exist',
+        ], 422),
+        '*customer-portal/orders/*' => Http::response([
+            'error' => 'Should not be called',
+        ], 500),
+    ]);
+
+    $invoices = $this->user->invoices();
+
+    expect($invoices['items'])
+        ->toHaveCount(1)
+        ->and($invoices['items'][0]['id'])->toBe('ord_paid');
+
+    Http::assertNotSent(function ($request) {
+        return str_contains($request->url(), '/customer-sessions/')
+            || str_contains($request->url(), '/customer-portal/orders/');
+    });
+});
+
+it('uses the active subscription customer for the customer portal url', function () {
+    $this->user->createCustomer([
+        'polar_id' => 'cus_old',
+        'name' => 'Test Customer',
+        'email' => 'test@example.com',
+    ]);
+
+    $this->user->subscriptions()->create([
+        'polar_id' => 'sub_123',
+        'type' => 'default',
+        'status' => 'active',
+    ]);
+
+    Http::fake([
+        '*subscriptions/sub_123*' => Http::response([
+            'id' => 'sub_123',
+            'customer_id' => 'cus_current',
+        ], 200),
+        '*customer-sessions/*' => Http::response([
+            'token' => 'session-token',
+            'customer_portal_url' => 'https://polar.sh/portal/session-token',
+        ], 200),
+    ]);
+
+    $url = $this->user->customerPortalUrl('https://example.com/billing');
+
+    expect($url)->toBe('https://polar.sh/portal/session-token');
+
+    Http::assertSent(function ($request) {
+        return str_contains($request->url(), '/customer-sessions/')
+            && $request['customer_id'] === 'cus_current'
+            && $request['return_url'] === 'https://example.com/billing';
+    });
+});
+
+it('does not crash invoice helpers when customer sessions are unavailable', function () {
+    $this->user->createCustomer([
+        'polar_id' => 'cus_old',
+        'name' => 'Test Customer',
+        'email' => 'test@example.com',
+    ]);
+
+    $this->user->subscriptions()->create([
+        'polar_id' => 'sub_123',
+        'type' => 'default',
+        'status' => 'active',
+    ]);
+
+    Http::fake([
+        '*subscriptions/sub_123*' => Http::response([
+            'id' => 'sub_123',
+            'customer_id' => 'cus_current',
+        ], 200),
+        '*customer-sessions/*' => Http::response([
+            'error' => 'Customer does not exist',
+        ], 422),
+    ]);
+
+    expect($this->user->generateInvoice('ord_123'))->toBeFalse()
+        ->and($this->user->getInvoice('ord_123'))->toBeNull();
 });
